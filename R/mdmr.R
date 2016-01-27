@@ -110,7 +110,7 @@ gower <- function(d.mat){
 #'  matrix regression with an effect size measure and the distribution of the
 #'  test statistic.
 #'
-#'  @examples
+#' @examples
 #'# --- The following two approaches yield equivalent results --- #
 #'# Approach 1
 #'data(mdmrdata)
@@ -428,7 +428,7 @@ print.mdmr <- function(x, ...){
 #'  matrix regression with an effect size measure and the distribution of the
 #'  test statistic.
 #'
-#'  @examples
+#' @examples
 #'# --- The following two approaches yield equivalent results --- #
 #'# Approach 1
 #'data(mdmrdata)
@@ -525,7 +525,7 @@ summary.mdmr <- function(object, ...){
 #' multivariate distance matrix regression with an effect size measure and the
 #' distribution of the test statistic.
 #'
-#'  @examples
+#' @examples
 #' data(mdmrdata)
 #' # --- Method 1 --- #
 #' delta(X.mdmr, Y = Y.mdmr, dtype = 'euclidean', niter = 10)

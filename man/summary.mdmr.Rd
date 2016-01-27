@@ -20,6 +20,15 @@ distance matrix}
 \description{
 \code{summary} method for class \code{mdmr}
 }
+\examples{
+# --- The following two approaches yield equivalent results --- #
+# Approach 1
+data(mdmrdata)
+D <- dist(Y.mdmr, method = 'euclidean')
+mdmr.res <- mdmr(X = X.mdmr, D = D)
+summary(mdmr.res)
+
+}
 \author{
 \packageAuthor{MDMR}
 }
@@ -36,13 +45,5 @@ Davies, R. B. (1980). The Distribution of a Linear Combination of
  McArtor, D.B. & Lubke, G.H. (submitted). Extending multivariate distance
  matrix regression with an effect size measure and the distribution of the
  test statistic.
-
- @examples
-# --- The following two approaches yield equivalent results --- #
-# Approach 1
-data(mdmrdata)
-D <- dist(Y.mdmr, method = 'euclidean')
-mdmr.res <- mdmr(X = X.mdmr, D = D)
-summary(mdmr.res)
 }
 

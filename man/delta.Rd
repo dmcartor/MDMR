@@ -83,15 +83,7 @@ to the names of the variables that were permuted. This option is implemented
 so that delta can be computed when MDMR is being used in conjunction with
 distance metrics not supported by \code{dist}.
 }
-\author{
-\packageAuthor{MDMR}
-}
-\references{
-McArtor, D.B. & Lubke, G.H. (submitted). Extending
-multivariate distance matrix regression with an effect size measure and the
-distribution of the test statistic.
-
- @examples
+\examples{
 data(mdmrdata)
 # --- Method 1 --- #
 delta(X.mdmr, Y = Y.mdmr, dtype = 'euclidean', niter = 10)
@@ -108,5 +100,14 @@ for(i in 1:q){
    G.list[[i]] <- gower(dist(Y.shuf, method = 'euclidean'))
 }
 delta(X.mdmr, G = G, G.list = G.list)
+
+}
+\author{
+\packageAuthor{MDMR}
+}
+\references{
+McArtor, D.B. & Lubke, G.H. (submitted). Extending
+multivariate distance matrix regression with an effect size measure and the
+distribution of the test statistic.
 }
 
