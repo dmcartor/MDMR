@@ -7,8 +7,8 @@
 \title{Multivariate Distance Matrix Regression}
 \description{
 \code{MDMR} allows a user to conduct multivariate distance matrix regression
-using analytical p-values and measures of effect size described by McArtor &
-Lubke (submitted). Analytical p-values are computed using the R package
+using analytic p-values and measures of effect size described by McArtor &
+Lubke (submitted). Analytic p-values are computed using the R package
 CompQuadForm (Duchesne & De Micheaux, 2010).
 }
 \section{Usage}{
@@ -24,6 +24,16 @@ CompQuadForm (Duchesne & De Micheaux, 2010).
  help files of both functions provide more general information than the
  package vignette.
 }
+\examples{
+data(mdmrdata)
+D <- dist(Y.mdmr, method = 'euclidean')
+
+mdmr.res <- mdmr(X = X.mdmr, D = D)
+summary(mdmr.res)
+
+mdmr.delta <- delta(X = X.mdmr, Y = Y.mdmr, dtype = 'euclidean')
+
+}
 \references{
 Davies, R. B. (1980). The Distribution of a Linear Combination of
  chi-square Random Variables. Journal of the Royal Statistical Society.
@@ -37,17 +47,5 @@ Davies, R. B. (1980). The Distribution of a Linear Combination of
  McArtor, D.B. & Lubke, G.H. (submitted). Extending multivariate distance
  matrix regression with an effect size measure and the distribution of the
  test statistic.
-
- @examples
-data(mdmrdata)
-D <- dist(Y.mdmr, method = 'euclidean')
-
-mdmr.res <- mdmr(X = X.mdmr, D = D)
-summary(mdmr.res)
-
-mdmr.delta <- delta(X = X.mdmr, Y = Y.mdmr, dtype = 'euclidean')
-
- @importFrom CompQuadForm davies
- @importFrom parallel mclapply
 }
 
