@@ -1,3 +1,8 @@
+## Resubmission
+This is a resubmission. In this version I have:
+
+* Reduced the run times of the examples that were in violation of CRAN Policy.
+
 ## Test environments
 * local OS X install, R 3.2.3
 * local Windows 7 install, R 3.0.0

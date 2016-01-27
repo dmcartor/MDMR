@@ -4,11 +4,6 @@ data(mdmrdata)
 D <- dist(Y.mdmr, method = 'manhattan')
 
 ## ------------------------------------------------------------------------
-
-## ------------------------------------------------------------------------
-
-
-## ------------------------------------------------------------------------
 mdmr.res <- mdmr(X = X.mdmr, D = D)
 summary(mdmr.res)
 
@@ -23,9 +18,9 @@ summary(mdmr.res2)
 # --- subsequent calls
 # Generate a hypothetical additional predictor we want to test first
 x1 <- rnorm(500)
-mdmr.res <- mdmr(X = x1, D = D, return.lambda = T)
+mdmr.tmp <- mdmr(X = x1, D = D, return.lambda = T)
 # Pass the eigenvalues output by mdmr(return.lambda = t) to the next call of mdmr()
-lambda <- mdmr.res$lambda
+lambda <- mdmr.tmp$lambda
 mdmr.res3 <- mdmr(X = X.mdmr, G = G, lambda = lambda)
 summary(mdmr.res3)
 
@@ -37,7 +32,7 @@ cor.test(X.mdmr[,1], Y.mdmr[,1])
 
 ## ---- fig.width = 7, fig.height = 7/(16/9)-------------------------------
 delta(X = X.mdmr, Y = Y.mdmr, dtype = 'manhattan', plot.res = T,
-      niter = 10, seed = 102)
+      niter = 1, seed = 12345)
 
 ## ---- fig.width = 7, fig.height = 7/(16/9)-------------------------------
 D <- dist(Y.mdmr, method = 'manhattan')
@@ -50,5 +45,5 @@ for(i in 1:q){
    Y.shuf[,i] <- sample(Y.shuf[,i])
    G.list[[i]] <- gower(dist(Y.shuf, method = 'manhattan'))
 }
-delta(X = X.mdmr, G = G, G.list = G.list,  plot.res = T, seed = 102)
+delta(X = X.mdmr, G = G, G.list = G.list,  plot.res = T)
 

@@ -37,7 +37,8 @@
 #'mdmr.res <- mdmr(X = X.mdmr, D = D)
 #'summary(mdmr.res)
 #'
-#'mdmr.delta <- delta(X = X.mdmr, Y = Y.mdmr, dtype = 'euclidean')
+#'mdmr.delta <- delta(X = X.mdmr, Y = Y.mdmr, dtype = 'euclidean',
+#'                    niter = 1, seed = 12345)
 #'
 #' @importFrom CompQuadForm davies
 #' @importFrom  parallel mclapply

@@ -87,7 +87,7 @@ distance metrics not supported by \code{dist}.
 \examples{
 data(mdmrdata)
 # --- Method 1 --- #
-delta(X.mdmr, Y = Y.mdmr, dtype = 'euclidean', niter = 10)
+delta(X.mdmr, Y = Y.mdmr, dtype = 'euclidean', niter = 1, seed = 12345)
 
 # --- Method 2 --- #
 D <- dist(Y.mdmr, method = 'euclidean')
