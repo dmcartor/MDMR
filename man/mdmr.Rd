@@ -33,10 +33,11 @@ implemented in the \code{\link{davies}} function in the \code{CompQuadForm}
 package (Duchesne &  De Micheaux, 2010) that \code{mdmr()} uses to compute
 MDMR p-values.}
 
-\item{ncores}{Integer; if \code{ncores} > 1, the \code{\link{parallel}} package is
-used to speed computation. Note: Windows users must set \code{ncores = 1}
-because the \code{parallel} pacakge relies on forking. See \code{mc.cores} in
-the \code{\link{mclapply}} function in the \code{parallel} pacakge for more details.}
+\item{ncores}{Integer; if \code{ncores} > 1, the \code{\link{parallel}}
+package is used to speed computation. Note: Windows users must set
+\code{ncores = 1} because the \code{parallel} pacakge relies on forking. See
+\code{mc.cores} in the \code{\link{mclapply}} function in the
+\code{parallel} pacakge for more details.}
 }
 \value{
 An object with five elements and a summary function. Calling

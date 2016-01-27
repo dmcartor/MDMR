@@ -36,10 +36,11 @@ column has been randomly permuted.}
 \item{plot.res}{Logical; Indicates whether or not a heat-map of the results
 should be plotted.}
 
-\item{ncores}{Integer; if \code{ncores} > 1, the \code{\link{parallel}} package is
-used to speed computation. Note: Windows users must set \code{ncores = 1}
-because the \code{parallel} pacakge relies on forking. See \code{mc.cores} in
-the \code{\link{mclapply}} function in the \code{parallel} pacakge for more details.}
+\item{ncores}{Integer; if \code{ncores} > 1, the \code{\link{parallel}}
+package is used to speed computation. Note: Windows users must set
+\code{ncores = 1} because the \code{parallel} pacakge relies on forking. See
+\code{mc.cores} in the \code{\link{mclapply}} function in the
+\code{parallel} pacakge for more details.}
 
 \item{seed}{Integer; sets seed for the permutations of each variable
 comprising Y so that results can be replicated.}

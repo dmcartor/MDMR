@@ -78,10 +78,11 @@ gower <- function(d.mat){
 #' implemented in the \code{\link{davies}} function in the \code{CompQuadForm}
 #' package (Duchesne &  De Micheaux, 2010) that \code{mdmr()} uses to compute
 #' MDMR p-values.
-#' @param ncores Integer; if \code{ncores} > 1, the \code{\link{parallel}} package is
-#' used to speed computation. Note: Windows users must set \code{ncores = 1}
-#' because the \code{parallel} pacakge relies on forking. See \code{mc.cores} in
-#' the \code{\link{mclapply}} function in the \code{parallel} pacakge for more details.
+#' @param ncores Integer; if \code{ncores} > 1, the \code{\link{parallel}}
+#' package is used to speed computation. Note: Windows users must set
+#' \code{ncores = 1} because the \code{parallel} pacakge relies on forking. See
+#' \code{mc.cores} in the \code{\link{mclapply}} function in the
+#' \code{parallel} pacakge for more details.
 #'
 #' @return An object with five elements and a summary function. Calling
 #' \code{summary(mdmr.res)} produces a data frame comprised of:
@@ -154,7 +155,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
   }
 
   # Handle potential factors, no-named variables
-  X <- model.matrix(~ . , data = as.data.frame(X))
+  X <- stats::model.matrix(~ . , data = as.data.frame(X))
   xnames <- colnames(X)
 
   # Record the number of items and sample size
@@ -503,10 +504,11 @@ summary.mdmr <- function(object, ...){
 #' column has been randomly permuted.
 #' @param plot.res Logical; Indicates whether or not a heat-map of the results
 #' should be plotted.
-#' @param ncores Integer; if \code{ncores} > 1, the \code{\link{parallel}} package is
-#' used to speed computation. Note: Windows users must set \code{ncores = 1}
-#' because the \code{parallel} pacakge relies on forking. See \code{mc.cores} in
-#' the \code{\link{mclapply}} function in the \code{parallel} pacakge for more details.
+#' @param ncores Integer; if \code{ncores} > 1, the \code{\link{parallel}}
+#' package is used to speed computation. Note: Windows users must set
+#' \code{ncores = 1} because the \code{parallel} pacakge relies on forking. See
+#' \code{mc.cores} in the \code{\link{mclapply}} function in the
+#' \code{parallel} pacakge for more details.
 #' @param seed Integer; sets seed for the permutations of each variable
 #' comprising Y so that results can be replicated.
 #'
@@ -568,7 +570,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
   }
 
   # Handle potential factors, no-named variables
-  X <- model.matrix(~ . , data = as.data.frame(X))[,-1]
+  X <- stats::model.matrix(~ . , data = as.data.frame(X))[,-1]
   xnames <- colnames(X)
   p <- ncol(X)
   n <- nrow(X)
@@ -658,7 +660,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
       ynames <- paste0('Y', 1:q)
     }
 
-    G <- gower(dist(Y, method = dtype))
+    G <- gower(stats::dist(Y, method = dtype))
 
     n <- nrow(X)
 
@@ -682,7 +684,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
                    y.jack
                  })
                  res <- lapply(jackknifed.y, function(yy){
-                   GG <- gower(dist(yy, method = dtype))
+                   GG <- gower(stats::dist(yy, method = dtype))
                    pseudo.r2(GG)
                  })
                  res <- matrix(unlist(res), nrow = p+1, ncol = q)
@@ -704,7 +706,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
       # requires one, which is why "seed" is an argument rather than using the
       # standard approach of just setting a seed prior to running the function
       if(is.null(seed)){
-        seed <- round(runif(1,0,1) * 1e5)
+        seed <- round(stats::runif(1,0,1) * 1e5)
       }
 
       # Compute pseudo R-square with each item jackknifed "niter" times
@@ -719,7 +721,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
                                y.jack
                              })
                              res <- lapply(jackknifed.y, function(yy){
-                               GG <- gower(dist(yy, method = dtype))
+                               GG <- gower(stats::dist(yy, method = dtype))
                                pseudo.r2(GG)
                              })
                              res <- matrix(unlist(res), nrow = p+1, ncol = q)
@@ -747,7 +749,8 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
                                  paste0(ynames, '.jack'))
     for(i in 1:nrow(delta.med)){
       for(j in 1:ncol(delta.med)){
-        delta.med[i,j] <- median(unlist(lapply(jack.pr2, function(x){x[i,j]})))
+        delta.med[i,j] <- stats::median(
+          unlist(lapply(jack.pr2, function(x){x[i,j]})))
       }
     }
 
@@ -796,7 +799,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
       # requires one, which is why "seed" is an argument rather than using the
       # standard approach of just setting a seed prior to running the function
       if(is.null(seed)){
-        seed <- round(runif(1,0,1) * 1e5)
+        seed <- round(stats::runif(1,0,1) * 1e5)
       }
 
       # Compute pseudo R-square with each item jackknifed "niter" times
@@ -824,17 +827,17 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
   # Step 5: Plot
   # ============================================================================
   if(plot.res){
-    plot(NA, xlim = c(0.5, q+0.5), ylim = c(0.5,p+0.5+1), xaxt = 'n',
+    graphics::plot(NA, xlim = c(0.5, q+0.5), ylim = c(0.5,p+0.5+1), xaxt = 'n',
          yaxt = 'n',  xlab = '', ylab = '', bty = 'n',
          main = 'MDMR Effect Sizes')
-    axis(1, at = 1:q, labels = c(ynames), las = 2)
-    axis(2, at = (p+1):1, labels = c('Omnibus', xnames), las = 1)
+    graphics::axis(1, at = 1:q, labels = c(ynames), las = 2)
+    graphics::axis(2, at = (p+1):1, labels = c('Omnibus', xnames), las = 1)
 
     # Convert to z scores for shading
     z.scores <- matrix(scale(c(delta.med)), nrow = p+1, ncol = q)
     z.scores[delta.med < 0] <- -9999
-    omni.cols <- pnorm(z.scores[1,])
-    pairwise.cols <- pnorm(z.scores[-1,])
+    omni.cols <- stats::pnorm(z.scores[1,])
+    pairwise.cols <- stats::pnorm(z.scores[-1,])
 
     for(i in 1:nrow(delta.med)){
       for(j in 1:ncol(delta.med)){
@@ -845,17 +848,17 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
 
         if(i == 1){
           # Y importances
-          rect(x.low, y.low, x.up, y.up,
-               col = rgb(0, 0, 1, omni.cols[j]))
+          graphics::rect(x.low, y.low, x.up, y.up,
+               col = grDevices::rgb(0, 0, 1, omni.cols[j]))
         }
         if(i > 1){
           # XY Importances
-          rect(x.low, y.low, x.up, y.up,
-               col = rgb(0,0.75,0, pairwise.cols[i-1,j]))
+          graphics::rect(x.low, y.low, x.up, y.up,
+               col = grDevices::rgb(0,0.75,0, pairwise.cols[i-1,j]))
         }
 
         # Effect Size text
-        text(x = j, y = p - i + 1 + 1, col = 'white',
+        graphics::text(x = j, y = p - i + 1 + 1, col = 'white',
              labels = formatC(delta.med[i,j], format = 'g', digits = 2),
              cex = 0.75)
       }

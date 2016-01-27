@@ -5,7 +5,7 @@ Version: 0.2.0
 Date: 2016-01-23
 Author: Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
 Maintainer: Daniel B. McArtor <dmcartor@nd.edu>
-Description: This package allows a user to conduct multivariate distance matrix
+Description: Allows a user to conduct multivariate distance matrix
     regression using analytical p-values and measures of effect size described
     by McArtor & Lubke (submitted). Analytical p-values are computed using the
     \code{R} package \code{CompQuadForm} (Duchesne & De Micheaux, 2010).
@@ -13,7 +13,6 @@ License: GPL (>= 2)
 LazyData: TRUE
 Depends:
     R (>= 3.0.0),
-    CompQuadForm (>= 1.4.1)
 Imports:
     CompQuadForm,
     parallel
