@@ -570,7 +570,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
   }
 
   # Handle potential factors, no-named variables
-  X <- stats::model.matrix(~ . , data = as.data.frame(X))[,-1]
+  X <- stats::model.matrix(~ . , data = as.data.frame(X))[,-1, drop = F]
   xnames <- colnames(X)
   p <- ncol(X)
   n <- nrow(X)
