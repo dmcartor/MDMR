@@ -83,18 +83,45 @@ gower <- function(d.mat){
 #' \code{ncores = 1} because the \code{parallel} pacakge relies on forking. See
 #' \code{mc.cores} in the \code{\link{mclapply}} function in the
 #' \code{parallel} pacakge for more details.
+#' @param perm.p Logical: should permutation-based p-values be computed instead
+#' of analytic p-values? Default behavior is \code{TRUE} if \code{n < 200} and
+#' \code{FALSE} otherwise because the anlytic p-values depend on asymptotics.
+#' for \code{n > 200} and "permutation" otherwise.
+#' @param nperm Number of permutations to use if permutation-based p-values are
+#' to be computed.
+#' @param seed Random seed to use to generate the permutation null distribution.
+#' Defaults to a random seed.
 #'
-#' @return An object with five elements and a summary function. Calling
+#' @return An object with six elements and a summary function. Calling
 #' \code{summary(mdmr.res)} produces a data frame comprised of:
 #' \item{Statistic}{Value of the corresponding MDMR test statistic}
 #' \item{Pseudo R2}{Size of the corresponding effect on the
 #' distance matrix}
-#' \item{p-value}{Analytical p-value}
+#' \item{p-value}{The p-value for each effect.}
 #' In addition to the information in the three columns comprising
-#' \code{summary(res)}, the \code{res} object also contains  a vector reporting
-#' the precision of each p-value as reported by the \code{davies} function in
-#' \code{CompQuadForm} and a vector of the eigenvalues of \code{G} (if
-#' \code{return.lambda = T}).
+#' \code{summary(res)}, the \code{res} object also contains:
+#'
+#' \item{p.prec}{A data.frame reporting the precision of each p-value. If
+#' analytic p-values were computed, these are the maximum error bound of the
+#' p-values reported by the \code{davies} function in \code{CompQuadForm}. If
+#' permutation p-values were computed, it is the standard error of each
+#' permutation p-value.}
+#' \item{lambda}{A vector of the eigenvalues of \code{G} (if
+#' \code{return.lambda = T}).}
+#' \item{nperm}{Number of permutations used. Will read \code{NA} if analytic
+#' p-values were computed}
+#'
+#' Note that the printed output of \code{summary(res)} will truncate p-values
+#' to the smallest trustworthy values, but the object returned by
+#' \code{summary(res)} will contain the p-values as computed. The reason for
+#' this truncation differs for analytic and permutation p-values. For an
+#' analytic p-value, if the error bound of the Davies algorithm is larger than
+#' the p-value, the only conclusion that can be drawn with certainty is that
+#' the p-value is smaller than (or equal to) the error bound. For a permutation
+#' test, the estimated p-value will be zero if no permuted test statistics are
+#' greater than the observed statistic, but the zero p-value is only a product
+#' of the finite number of permutations conduted. The only conclusion that can
+#' be drawn is that the p-value is smaller than \code{1/nperm}.
 #'
 #' @author \packageAuthor{MDMR}
 #'
@@ -128,7 +155,9 @@ gower <- function(d.mat){
 #' @importFrom parallel mclapply
 #' @export
 mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
-                 start.acc = 1e-20, ncores = 1){
+                 start.acc = 1e-20, ncores = 1,
+                 perm.p = (nrow(as.matrix(X)) < 200),
+                 nperm = 500, seed = NULL){
   # Make sure "D" is not interpreted as the D function
   if(is.function(D)){
     stop(paste0('Please provide either a distance matrix or a ',
@@ -154,6 +183,8 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
     G <- gower(D)
   }
 
+
+  # ======================= Omnibus Test Statistic =========================== #
   # Handle potential factors, no-named variables
   X <- stats::model.matrix(~ . , data = as.data.frame(X))
   xnames <- colnames(X)
@@ -163,42 +194,6 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
   n <- nrow(X)
 
 
-  # ===================== FUNCTION TO COMPUTE P-VALUES ======================= #
-  pmdmr <- function(q, lambda, k, p, n = length(lambda),
-                    lim = 50000, acc = start.acc){
-    # Use the eigenvalues of G and the test statistic q to make a vector
-    # corresponding to all of the weights for the composite chi-square variables
-    # See Equation 12 in McArtor & Lubke (2015)
-    gamma <- c(lambda,  -q * lambda)
-
-    # Aggregate the degrees of freedom for each composite chi-square variable
-    # See Equation 12 in McArtor & Lubke (2015)
-    nu <- c(rep(k, length(lambda)), rep(n-p-1, length(lambda)))
-
-    # Call the Davies function at zero using the given weights and df, along
-    # with the starting values of the metaparameters of the algorithm
-    pv <- CompQuadForm::davies(0, lambda = gamma, h = nu, lim = lim, acc = acc)
-
-    # Check error status. If there was an error, return entire davies object
-    if(pv$ifault != 0){
-      #     warning('Error in davies() procedure, please check results.')
-      return(pv)
-    }
-
-    # If the p-value is below zero, interpret as an error and break
-    if(pv$Qq < 0){
-      #     warning('Error in davies() procedure, please check results.')
-      return(pv)
-    }
-
-    # If there was no error, return only the p-value
-    if(pv$ifault == 0){
-      return(pv$Qq)
-    }
-  }
-
-
-  # ======================= Omnibus Test Statistic =========================== #
   # Compute hat matrix
   H <- tcrossprod(tcrossprod(X, solve(crossprod(X))), X)
 
@@ -235,24 +230,9 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
   pr2.omni <- as.numeric(numer / trG)
   f.omni <- as.numeric(numer / denom)
 
-  # Omnibus p-value
-  # Compute the eigenvalues of G if they were not provided
-  if(is.null(lambda)){
-    lambda <- eigen(G, only.values = T)$values
-  }
 
-  # Initiailze accuracy of the Davies algorithm
-  acc.omni <- start.acc
-  pv.omni <- pmdmr(f.omni, lambda, p, p, n, acc = acc.omni)
 
-  # If the davies procedure threw an error, decrease the accuracy
-  while(length(pv.omni) > 1){
-    acc.omni <- acc.omni * 10
-    pv.omni <- pmdmr(q = f.omni, lambda = lambda, k = p, p = p, n = n,
-                     acc = acc.omni)
-  }
-
-  # ====================== Tests of Each Predictor =========================== #
+  # ==================== Conditional Test Statistics ======================== #
 
   # --- CASE 1: NO PARALLELIZATION --- #
   if(ncores == 1){
@@ -279,24 +259,6 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
     # Rescale to get either test statistic or pseudo r-square
     f.x <- numer.x / denom
     pr2.x <- numer.x / trG
-
-    # Get p-values
-    p.res <- lapply(1:p, function(k){
-      item.acc <- start.acc
-      pv <- pmdmr(q = f.x[k], lambda = lambda, k = 1,
-                  p = p, n = n, acc = item.acc)
-
-      # If the davies procedure threw an error, decrease the accuracy
-      while(length(pv) > 1){
-        item.acc <- item.acc * 10
-        pv <- pmdmr(q = f.x[k], lambda = lambda, k = 1,
-                    p = p, n = n, acc = item.acc)
-      }
-      c(pv.x = pv, acc = item.acc)
-    })
-    pv.x <- unlist(lapply(p.res, function(p){p[[1]]}))
-    acc.x <- unlist(lapply(p.res, function(p){p[[2]]}))
-
   }
 
   # --- CASE 2: WITH PARALLELIZATION --- #
@@ -330,48 +292,276 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
     # Rescale to get either test statistic or pseudo r-square
     f.x <- numer.x / denom
     pr2.x <- numer.x / trG
+  }
 
-    # Get p-values
-    p.res <- parallel::mclapply(1:p, function(k){
-      item.acc <- start.acc
-      pv <- pmdmr(q = f.x[k], lambda = lambda, k = 1,
-                  p = p, n = n, acc = item.acc)
 
-      # If the davies procedure threw an error, decrease the accuracy
-      while(length(pv) > 1){
-        item.acc <- item.acc * 10
+  # --- Combine test statistics and pseudo R-squares --- #
+  stat <- data.frame('stat' = c(f.omni, f.x),
+                     row.names = c('Omnibus', xnames[-1]))
+  pr2 <- data.frame('pseudo.Rsq' = c(pr2.omni, pr2.x),
+                    row.names = c('Omnibus', xnames[-1]))
+
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # ANALYTIC APPROACH TO P-VALUES
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if(!perm.p){
+
+    # =============== FUNCTION TO COMPUTE ANALYTIC P-VALUES ================= #
+    pmdmr <- function(q, lambda, k, p, n = length(lambda),
+                      lim = 50000, acc = start.acc){
+      # Use the eigenvalues of G and the test statistic q to make a vector
+      # corresponding to all of the weights for the composite chi-square variables
+      # See Equation 12 in McArtor & Lubke (2015)
+      gamma <- c(lambda,  -q * lambda)
+
+      # Aggregate the degrees of freedom for each composite chi-square variable
+      # See Equation 12 in McArtor & Lubke (2015)
+      nu <- c(rep(k, length(lambda)), rep(n-p-1, length(lambda)))
+
+      # Call the Davies function at zero using the given weights and df, along
+      # with the starting values of the metaparameters of the algorithm
+      pv <- CompQuadForm::davies(0, lambda = gamma, h = nu, lim = lim, acc = acc)
+
+      # Check error status. If there was an error, return entire davies object
+      if(pv$ifault != 0){
+        #     warning('Error in davies() procedure, please check results.')
+        return(pv)
+      }
+
+      # If the p-value is below zero, interpret as an error and break
+      if(pv$Qq < 0){
+        #     warning('Error in davies() procedure, please check results.')
+        return(pv)
+      }
+
+      # If there was no error, return only the p-value
+      if(pv$ifault == 0){
+        return(pv$Qq)
+      }
+    }
+
+
+
+
+    # Omnibus p-value
+    # Compute the eigenvalues of G if they were not provided
+    if(is.null(lambda)){
+      lambda <- eigen(G, only.values = T)$values
+    }
+
+    # Initiailze accuracy of the Davies algorithm
+    acc.omni <- start.acc
+    pv.omni <- pmdmr(f.omni, lambda, p, p, n, acc = acc.omni)
+
+    # If the davies procedure threw an error, decrease the accuracy
+    while(length(pv.omni) > 1){
+      acc.omni <- acc.omni * 10
+      pv.omni <- pmdmr(q = f.omni, lambda = lambda, k = p, p = p, n = n,
+                       acc = acc.omni)
+    }
+
+
+
+    # --- CASE 1: NO PARALLELIZATION --- #
+    if(ncores == 1){
+
+      # Get p-values
+      p.res <- lapply(1:p, function(k){
+        item.acc <- start.acc
         pv <- pmdmr(q = f.x[k], lambda = lambda, k = 1,
                     p = p, n = n, acc = item.acc)
-      }
-      c(pv.x = pv, acc = item.acc)
-    },
-    mc.preschedule = TRUE, mc.set.seed = TRUE,
-    mc.silent = FALSE, mc.cores = ncores,
-    mc.cleanup = TRUE, mc.allow.recursive = TRUE)
 
-    pv.x <- unlist(lapply(p.res, function(p){p[[1]]}))
-    acc.x <- unlist(lapply(p.res, function(p){p[[2]]}))
+        # If the davies procedure threw an error, decrease the accuracy
+        while(length(pv) > 1){
+          item.acc <- item.acc * 10
+          pv <- pmdmr(q = f.x[k], lambda = lambda, k = 1,
+                      p = p, n = n, acc = item.acc)
+        }
+        c(pv.x = pv, acc = item.acc)
+      })
+      pv.x <- unlist(lapply(p.res, function(p){p[[1]]}))
+      acc.x <- unlist(lapply(p.res, function(p){p[[2]]}))
+
+    }
+
+    # --- CASE 2: WITH PARALLELIZATION --- #
+    if(ncores > 1){
+
+      # Get p-values
+      p.res <- parallel::mclapply(1:p, function(k){
+        item.acc <- start.acc
+        pv <- pmdmr(q = f.x[k], lambda = lambda, k = 1,
+                    p = p, n = n, acc = item.acc)
+
+        # If the davies procedure threw an error, decrease the accuracy
+        while(length(pv) > 1){
+          item.acc <- item.acc * 10
+          pv <- pmdmr(q = f.x[k], lambda = lambda, k = 1,
+                      p = p, n = n, acc = item.acc)
+        }
+        c(pv.x = pv, acc = item.acc)
+      },
+      mc.preschedule = TRUE, mc.set.seed = TRUE,
+      mc.silent = FALSE, mc.cores = ncores,
+      mc.cleanup = TRUE, mc.allow.recursive = TRUE)
+
+      pv.x <- unlist(lapply(p.res, function(p){p[[1]]}))
+      acc.x <- unlist(lapply(p.res, function(p){p[[2]]}))
+    }
+
+
+    pv <- data.frame('analytic.pvals' = c(pv.omni, pv.x),
+                     row.names = c('Omnibus', xnames[-1]))
+    pv.acc <- data.frame('p.max.error' = c(acc.omni, acc.x),
+                         row.names = c('Omnibus', xnames[-1]))
+
+    # Overwrite nperm to show no permutations were done
+    nperm <- NA
   }
 
 
 
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # PERMUTATION APPROACH TO P-VALUES
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if(perm.p){
 
-  # ====================== Combine Output =========================== #
-  stat <- c(f.omni, f.x)
-  pr2 <- c(pr2.omni, pr2.x)
-  pv <- c(pv.omni, pv.x)
-  pv.acc <- c(acc.omni, acc.x)
+    # --- Function to compute test statistics for a permuted design matrix --- #
+    mdmr.permstats <- function(arg = NULL){
+      # Permute rows of X
+      perm.indices <- sample(1:n, size = n, replace = F)
+      X.perm <- X[perm.indices,]
 
-  names(stat) <- names(pr2) <- names(pv) <- names(pv.acc) <-
-    c('Omnibus', xnames[-1])
+      # OMNIBUS
+      H.perm <- tcrossprod(tcrossprod(X.perm, solve(crossprod(X.perm))), X.perm)
+      vh.perm <- matrix(H.perm, nrow = 1)
+      numer.perm <- vh.perm[,1:chunksize] %*% vg[1:chunksize,]
+      if(nchunk>1){
+        for(i in 2:nchunk){
+          ind <- (chunkEnd[i-1]+1):chunkEnd[i]
+          numer.perm <- numer.perm + vh.perm[,ind] %*% vg[ind,]
+        }
+      }
+      denom.perm <- trG - numer.perm
+      f.omni.perm <- numer.perm / denom.perm
+
+      # CONDITIONAL
+      Hs.perm <- lapply(2:(p+1), function(k){
+        Xs.perm <- X.perm[,-k]
+        Hs.perm <- tcrossprod(
+          tcrossprod(Xs.perm, solve(crossprod(Xs.perm))), Xs.perm)
+        matrix(H.perm - Hs.perm, nrow = 1)
+      })
+
+      numer.x.perm <- unlist(lapply(Hs.perm, function(vhs.perm){
+        numer.perm <- vhs.perm[,1:chunksize] %*% vg[1:chunksize,]
+        if(nchunk>1){
+          for(i in 2:nchunk){
+            ind <- (chunkEnd[i-1]+1):chunkEnd[i]
+            numer.perm <- numer.perm + vhs.perm[,ind] %*% vg[ind,]
+          }
+        }
+        numer.perm
+      }))
+
+      f.x.perm <- numer.x.perm / denom.perm
+
+      # OUTPUT
+      return(c(f.omni.perm, f.x.perm))
+    }
+
+
+    # --- CASE 1: NO PARALLELIZATION --- #
+    if(ncores == 1){
+
+      # Set seed if not specified: make sure it doesn't overflow
+      if(is.null(seed)){
+        seed.max <- floor(.Machine$integer.max - 1)
+        seed <- round(runif(1,0,1)*seed.max)
+      }
+
+      set.seed(seed)
+
+      # Initialize counter for number of times each permuted test statistic is
+      # larger than the observed test statistic
+      perm.geq.obs <- rep(0, p + 1)
+
+      for(i in 1:nperm){
+        perm.geq.obs <- perm.geq.obs + (mdmr.permstats() >= stat)
+        if(i %% 1000 == 0){
+          cat(round(i/nperm*100), '% of permutation test statistics computed.',
+              fill = T)
+        }
+      }
+    }
+
+    # --- CASE 2: PARALLELIZATION --- #
+    if(ncores > 1){
+
+      # --- Chunked mclapply --- #
+      # Set up chunk size
+      perm.nchunk <- ceiling(n*nperm / 1e6)
+      perm.chunkSize <- ceiling(nperm / perm.nchunk)
+      nperm <- perm.nchunk * perm.chunkSize
+      perm.chunkStart <- seq(1, nperm, by = perm.chunkSize)
+      perm.chunkEnd <- perm.chunkStart + perm.chunkSize - 1
+      perm.chunkEnd[perm.nchunk] <- nperm
+
+      # Set seed if not specified: make sure it doesn't overflow
+      if(is.null(seed)){
+        max.int <- .Machine$integer.max
+        seed.max <- floor((max.int - perm.chunkSize) / perm.nchunk)
+        seed <- round(runif(1,0,1)*seed.max)
+      }
+
+      # Initialize counter for number of times each permuted test statistic is
+      # larger than the observed test statistic
+      perm.geq.obs <- rep(0, p + 1)
+
+      # Compute permutation p-values
+      for(i in 1:perm.nchunk){
+        res <- parallel::mclapply(1:perm.chunkSize, function(xx){
+          set.seed(seed * i + xx)
+          mdmr.permstats() >= stat},
+          mc.preschedule = TRUE, mc.set.seed = TRUE,
+          mc.silent = FALSE, mc.cores = ncores,
+          mc.cleanup = TRUE, mc.allow.recursive = TRUE)
+        perm.geq.obs <- perm.geq.obs +
+          colSums(
+            matrix(unlist(res), nrow = perm.chunkSize, ncol = p + 1, byrow = T))
+
+        cat((perm.chunkEnd[i]/nperm)*100,
+            '% of permutation test statistics computed.',
+            fill = T)
+      }
+    }
+
+    # --- Compute p-values --- #
+    pv.omni <- perm.geq.obs[1] / nperm
+    pv.x <- perm.geq.obs[-1] / nperm
+    pv <- data.frame('perm.pvals' = c(pv.omni, pv.x),
+                     row.names = c('Omnibus', xnames[-1]))
+
+
+    # --- Standard Error --- #
+    acc.omni <- sqrt((pv.omni * (1-pv.omni)) / nperm)
+    acc.x <- sqrt((pv.x * (1-pv.x)) / nperm)
+    pv.acc <- data.frame('perm.p.SE' = c(acc.omni, acc.x),
+                         row.names = c('Omnibus', xnames[-1]))
+  }
+
+
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # COMBINE AND RETURN OUTPUT
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   if(return.lambda){
     out <- list('stat' = stat, 'pr.sq' = pr2, 'pv' = pv, 'p.prec' = pv.acc,
-                lambda = lambda)
+                lambda = lambda, nperm = nperm)
   }
   if(!return.lambda){
     out <- list('stat' = stat, 'pr.sq' = pr2, 'pv' = pv, 'p.prec' = pv.acc,
-                lambda = NULL)
+                lambda = NULL, nperm = nperm)
   }
 
   class(out) <- c('mdmr', class(out))
@@ -395,10 +585,25 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
 #'
 #' @export
 print.mdmr <- function(x, ...){
-  cat('p-values for each predictor and the omnibus test:', fill = T)
-  hold <- data.frame(format.pval(x$pv), row.names = names(x$pv))
-  names(hold) <- ''
-  print(hold)
+  if(is.na(x$nperm)){
+    pv.name <- 'Analytic p-value'
+    # If it's analytic, we can only say it's below davies error
+    out <- rep(NA, nrow(x$pv))
+    for(i in 1:length(out)){
+      out[i] <- format.pval(x$pv[i,1], eps = x$p.prec[i,1])
+    }
+    out <- data.frame(out,row.names = rownames(x$pv))
+    names(out) <- pv.name
+    print(out)
+  }
+  if(!is.na(x$nperm)){
+    pv.name <- 'Permutation p-value'
+    # If it's a permutation test, we can only say it's below 1/nperm
+    out <- data.frame(format.pval(x$pv, eps = 1/x$nperm),
+                      row.names = rownames(x$pv))
+    names(out) <- pv.name
+    print(out)
+  }
 }
 
 #' Summarizing MDMR Results
@@ -408,11 +613,36 @@ print.mdmr <- function(x, ...){
 #' @param object Output from \code{mdmr}
 #' @param ... Further arguments passed to or from other methods.
 #'
-#' @return
+#' @return An object with six elements and a summary function. Calling
+#' \code{summary(mdmr.res)} produces a data frame comprised of:
 #' \item{Statistic}{Value of the corresponding MDMR test statistic}
-#' \item{Pseudo R2}{Effect size of the corresponding effect on the
+#' \item{Pseudo R2}{Size of the corresponding effect on the
 #' distance matrix}
-#' \item{p-value}{Analytical p-value}
+#' \item{p-value}{The p-value for each effect.}
+#' In addition to the information in the three columns comprising
+#' \code{summary(res)}, the \code{res} object also contains:
+#'
+#' \item{p.prec}{A data.frame reporting the precision of each p-value. If
+#' analytic p-values were computed, these are the maximum error bound of the
+#' p-values reported by the \code{davies} function in \code{CompQuadForm}. If
+#' permutation p-values were computed, it is the standard error of each
+#' permutation p-value.}
+#' \item{lambda}{A vector of the eigenvalues of \code{G} (if
+#' \code{return.lambda = T}).}
+#' \item{nperm}{Number of permutations used. Will read \code{NA} if analytic
+#' p-values were computed}
+#'
+#' Note that the printed output of \code{summary(res)} will truncate p-values
+#' to the smallest trustworthy values, but the object returned by
+#' \code{summary(res)} will contain the p-values as computed. The reason for
+#' this truncation differs for analytic and permutation p-values. For an
+#' analytic p-value, if the error bound of the Davies algorithm is larger than
+#' the p-value, the only conclusion that can be drawn with certainty is that
+#' the p-value is smaller than (or equal to) the error bound. For a permutation
+#' test, the estimated p-value will be zero if no permuted test statistics are
+#' greater than the observed statistic, but the zero p-value is only a product
+#' of the finite number of permutations conduted. The only conclusion that can
+#' be drawn is that the p-value is smaller than \code{1/nperm}.
 #'
 #' @author \packageAuthor{MDMR}
 #'
@@ -439,14 +669,38 @@ print.mdmr <- function(x, ...){
 #'
 #' @export
 summary.mdmr <- function(object, ...){
-  print(data.frame('Statistic' =
-                     format(object$stat, digits = 3),
-                   'Pseudo R2' = format.pval(object$pr.sq, digits = 3),
-                   'p-value' = format.pval(object$pv)))
-  res <- data.frame('Statistic' = object$stat,
-                    'Pseudo R2' = object$pr.sq,
-                    'p-value' = object$pv)
-  invisible(res)
+  if(is.na(object$nperm)){
+    pv.name <- 'Analytic p-value'
+    # If it's analytic, we can only say it's below davies error
+    pv.print <- rep(NA, nrow(object$pv))
+    for(i in 1:length(pv.print)){
+      pv.print[i] <- format.pval(object$pv[i,1], eps = object$p.prec[i,1])
+    }
+    print.res <- data.frame('Statistic' =
+                              format(object$stat, digits = 3),
+                            'Pseudo R2' = format.pval(object$pr.sq, digits = 3),
+                            'p-value' = pv.print)
+    out.res <- data.frame('Statistic' = object$stat,
+                          'Pseudo R2' = object$pr.sq,
+                          'p-value' = object$pv)
+    names(print.res) <- names(out.res) <- c('Statistic', 'Pseudo R2', pv.name)
+  }
+  if(!is.na(object$nperm)){
+    pv.name <- 'Permutation p-value'
+    # If it's a permutation test, we can only say it's below 1/nperm
+    pv.print <- format.pval(object$pv, eps = 1/object$nperm)
+
+    print.res <- data.frame('Statistic' =
+                              format(object$stat, digits = 3),
+                            'Pseudo R2' = format.pval(object$pr.sq, digits = 3),
+                            'p-value' = pv.print)
+    out.res <- data.frame('Statistic' = object$stat,
+                          'Pseudo R2' = object$pr.sq,
+                          'p-value' = object$pv)
+    names(print.res) <- names(out.res) <- c('Statistic', 'Pseudo R2', pv.name)
+  }
+  print(print.res)
+  invisible(out.res)
 }
 
 
@@ -704,9 +958,12 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
 
       # If no seed is specified by the user, generate a random one - mclapply
       # requires one, which is why "seed" is an argument rather than using the
-      # standard approach of just setting a seed prior to running the function
+      # standard approach of just setting a seed prior to running the function.
+      # Make sure the seed doesn't overflow.
       if(is.null(seed)){
-        seed <- round(stats::runif(1,0,1) * 1e5)
+        max.int <- .Machine$integer.max
+        max.seed <- floor(max.int - 1 - niter*10)
+        seed <- round(stats::runif(1,0,1) * max.seed)
       }
 
       # Compute pseudo R-square with each item jackknifed "niter" times
@@ -828,8 +1085,8 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
   # ============================================================================
   if(plot.res){
     graphics::plot(NA, xlim = c(0.5, q+0.5), ylim = c(0.5,p+0.5+1), xaxt = 'n',
-         yaxt = 'n',  xlab = '', ylab = '', bty = 'n',
-         main = 'MDMR Effect Sizes')
+                   yaxt = 'n',  xlab = '', ylab = '', bty = 'n',
+                   main = 'MDMR Effect Sizes')
     graphics::axis(1, at = 1:q, labels = c(ynames), las = 2)
     graphics::axis(2, at = (p+1):1, labels = c('Omnibus', xnames), las = 1)
 
@@ -849,18 +1106,18 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
         if(i == 1){
           # Y importances
           graphics::rect(x.low, y.low, x.up, y.up,
-               col = grDevices::rgb(0, 0, 1, omni.cols[j]))
+                         col = grDevices::rgb(0, 0, 1, omni.cols[j]))
         }
         if(i > 1){
           # XY Importances
           graphics::rect(x.low, y.low, x.up, y.up,
-               col = grDevices::rgb(0,0.75,0, pairwise.cols[i-1,j]))
+                         col = grDevices::rgb(0,0.75,0, pairwise.cols[i-1,j]))
         }
 
         # Effect Size text
         graphics::text(x = j, y = p - i + 1 + 1, col = 'white',
-             labels = formatC(delta.med[i,j], format = 'g', digits = 2),
-             cex = 0.75)
+                       labels = formatC(delta.med[i,j], format = 'g', digits = 2),
+                       cex = 0.75)
       }
     }
   }

@@ -5,7 +5,8 @@
 \title{Conduct MDMR with analytical p-values}
 \usage{
 mdmr(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
-  start.acc = 1e-20, ncores = 1)
+  start.acc = 1e-20, ncores = 1, perm.p = (nrow(as.matrix(X)) < 200),
+  nperm = 500, seed = NULL)
 }
 \arguments{
 \item{X}{A \eqn{n x p} matrix or data frame of predictors. Factors are
@@ -38,19 +39,49 @@ package is used to speed computation. Note: Windows users must set
 \code{ncores = 1} because the \code{parallel} pacakge relies on forking. See
 \code{mc.cores} in the \code{\link{mclapply}} function in the
 \code{parallel} pacakge for more details.}
+
+\item{perm.p}{Logical: should permutation-based p-values be computed instead
+of analytic p-values? Default behavior is \code{TRUE} if \code{n < 200} and
+\code{FALSE} otherwise because the anlytic p-values depend on asymptotics.
+for \code{n > 200} and "permutation" otherwise.}
+
+\item{nperm}{Number of permutations to use if permutation-based p-values are
+to be computed.}
+
+\item{seed}{Random seed to use to generate the permutation null distribution.
+Defaults to a random seed.}
 }
 \value{
-An object with five elements and a summary function. Calling
+An object with six elements and a summary function. Calling
 \code{summary(mdmr.res)} produces a data frame comprised of:
 \item{Statistic}{Value of the corresponding MDMR test statistic}
 \item{Pseudo R2}{Size of the corresponding effect on the
 distance matrix}
-\item{p-value}{Analytical p-value}
+\item{p-value}{The p-value for each effect.}
 In addition to the information in the three columns comprising
-\code{summary(res)}, the \code{res} object also contains  a vector reporting
-the precision of each p-value as reported by the \code{davies} function in
-\code{CompQuadForm} and a vector of the eigenvalues of \code{G} (if
-\code{return.lambda = T}).
+\code{summary(res)}, the \code{res} object also contains:
+
+\item{p.prec}{A data.frame reporting the precision of each p-value. If
+analytic p-values were computed, these are the maximum error bound of the
+p-values reported by the \code{davies} function in \code{CompQuadForm}. If
+permutation p-values were computed, it is the standard error of each
+permutation p-value.}
+\item{lambda}{A vector of the eigenvalues of \code{G} (if
+\code{return.lambda = T}).}
+\item{nperm}{Number of permutations used. Will read \code{NA} if analytic
+p-values were computed}
+
+Note that the printed output of \code{summary(res)} will truncate p-values
+to the smallest trustworthy values, but the object returned by
+\code{summary(res)} will contain the p-values as computed. The reason for
+this truncation differs for analytic and permutation p-values. For an
+analytic p-value, if the error bound of the Davies algorithm is larger than
+the p-value, the only conclusion that can be drawn with certainty is that
+the p-value is smaller than (or equal to) the error bound. For a permutation
+test, the estimated p-value will be zero if no permuted test statistics are
+greater than the observed statistic, but the zero p-value is only a product
+of the finite number of permutations conduted. The only conclusion that can
+be drawn is that the p-value is smaller than \code{1/nperm}.
 }
 \description{
 \code{mdmr} (multivariate distance matrix regression) is used to regress a

@@ -12,10 +12,36 @@
 \item{...}{Further arguments passed to or from other methods.}
 }
 \value{
+An object with six elements and a summary function. Calling
+\code{summary(mdmr.res)} produces a data frame comprised of:
 \item{Statistic}{Value of the corresponding MDMR test statistic}
-\item{Pseudo R2}{Effect size of the corresponding effect on the
+\item{Pseudo R2}{Size of the corresponding effect on the
 distance matrix}
-\item{p-value}{Analytical p-value}
+\item{p-value}{The p-value for each effect.}
+In addition to the information in the three columns comprising
+\code{summary(res)}, the \code{res} object also contains:
+
+\item{p.prec}{A data.frame reporting the precision of each p-value. If
+analytic p-values were computed, these are the maximum error bound of the
+p-values reported by the \code{davies} function in \code{CompQuadForm}. If
+permutation p-values were computed, it is the standard error of each
+permutation p-value.}
+\item{lambda}{A vector of the eigenvalues of \code{G} (if
+\code{return.lambda = T}).}
+\item{nperm}{Number of permutations used. Will read \code{NA} if analytic
+p-values were computed}
+
+Note that the printed output of \code{summary(res)} will truncate p-values
+to the smallest trustworthy values, but the object returned by
+\code{summary(res)} will contain the p-values as computed. The reason for
+this truncation differs for analytic and permutation p-values. For an
+analytic p-value, if the error bound of the Davies algorithm is larger than
+the p-value, the only conclusion that can be drawn with certainty is that
+the p-value is smaller than (or equal to) the error bound. For a permutation
+test, the estimated p-value will be zero if no permuted test statistics are
+greater than the observed statistic, but the zero p-value is only a product
+of the finite number of permutations conduted. The only conclusion that can
+be drawn is that the p-value is smaller than \code{1/nperm}.
 }
 \description{
 \code{summary} method for class \code{mdmr}

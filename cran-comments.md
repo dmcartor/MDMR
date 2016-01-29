@@ -1,7 +1,8 @@
 ## Resubmission
-This is a resubmission. In this version I have:
+Updating MDMR package. Changes:
 
-* Reduced the run times of the examples that were in violation of CRAN Policy.
+* Added an option to compute permutation-based p-values with mdmr()
+* Fixed an error resulting from passing a univariate predictor to delta()
 
 ## Test environments
 * local OS X install, R 3.2.3
@@ -9,15 +10,7 @@ This is a resubmission. In this version I have:
 * win-builder (devel and release)
 
 ## R CMD check results
-There were no ERRORs or WARNINGs, or NOTEs when run locally on OS X or 
-Windows 7.
-
-Win-builder returned no ERRORs or WARNINGs, but the following NOTE, representing
-the first-time submission of this package:
-
-* checking CRAN incoming feasibility ... NOTE
-Maintainer: 'Daniel B. McArtor <dmcartor@nd.edu>'
-New submission
+There were no ERRORs or WARNINGs, or NOTEs.
 
 ## Downstream dependencies
 No other packages depend on MDMR
