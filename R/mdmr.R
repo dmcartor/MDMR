@@ -909,7 +909,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
 
     # ====================== Return Results =========================== #
     res <- c(res, r2.x)
-    names(res) <- c('Omnibus', xnames[-1])
+    names(res) <- c('Omnibus', xnames)
     return(res)
   }
 
@@ -1095,40 +1095,79 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
   # Step 5: Plot
   # ============================================================================
   if(plot.res){
-    graphics::plot(NA, xlim = c(0.5, q+0.5), ylim = c(0.5,p+0.5+1), xaxt = 'n',
-                   yaxt = 'n',  xlab = '', ylab = '', bty = 'n',
-                   main = 'MDMR Effect Sizes')
-    graphics::axis(1, at = 1:q, labels = c(ynames), las = 2)
-    graphics::axis(2, at = (p+1):1, labels = c('Omnibus', xnames), las = 1)
+    # Case 1: Univaraite X
+    if(p == 1){
+      if(q == 1){
+        warning(paste0('Plotting results is uninformative ',
+                       'when X and Y are unidimensional.'))
+      }
+      if(q > 1){
+        graphics::plot(NA, xlim = c(0.5, q+0.5), ylim = c(0.5,p+0.5), xaxt = 'n',
+                       yaxt = 'n',  xlab = '', ylab = '', bty = 'n',
+                       main = 'MDMR Effect Sizes')
+        graphics::axis(1, at = 1:q, labels = c(ynames), las = 2)
+        graphics::axis(2, at = (p):1, labels = c('Omnibus'), las = 1)
 
-    # Convert to z scores for shading
-    z.scores <- matrix(scale(c(delta.med)), nrow = p+1, ncol = q)
-    z.scores[delta.med < 0] <- -9999
-    omni.cols <- stats::pnorm(z.scores[1,])
-    pairwise.cols <- stats::pnorm(z.scores[-1,])
+        # --- Convert to z scores for shading --- #
+        z.scores <- matrix(scale(c(delta.med[1,])), nrow = p, ncol = q)
+        z.scores[delta.med[1,] < 0] <- -9999
+        omni.cols <- stats::pnorm(z.scores[1,])
 
-    for(i in 1:nrow(delta.med)){
-      for(j in 1:ncol(delta.med)){
-        x.low <- j-0.5
-        y.low <- p-i+1-0.5+1
-        x.up <- j+0.5
-        y.up <- p-i+1+0.5+1
+          for(j in 1:ncol(delta.med)){
+            x.low <- j-0.5
+            y.low <- p-0.5
+            x.up <- j+0.5
+            y.up <- p+0.5
 
-        if(i == 1){
-          # Y importances
-          graphics::rect(x.low, y.low, x.up, y.up,
-                         col = grDevices::rgb(0, 0, 1, omni.cols[j]))
+              # Y importances
+              graphics::rect(x.low, y.low, x.up, y.up,
+                             col = grDevices::rgb(0, 0, 1, omni.cols[j]))
+
+
+            # Effect Size text
+            graphics::text(x = j, y = 1, col = 'white',
+                           labels = formatC(delta.med[1,j], format = 'g', digits = 2),
+                           cex = 0.75)
+          }
         }
-        if(i > 1){
-          # XY Importances
-          graphics::rect(x.low, y.low, x.up, y.up,
-                         col = grDevices::rgb(0,0.75,0, pairwise.cols[i-1,j]))
-        }
+    }
+    # Case 2: Multivariate X
+    if(p > 1){
+      graphics::plot(NA, xlim = c(0.5, q+0.5), ylim = c(0.5,p+0.5+1), xaxt = 'n',
+                     yaxt = 'n',  xlab = '', ylab = '', bty = 'n',
+                     main = 'MDMR Effect Sizes')
+      graphics::axis(1, at = 1:q, labels = c(ynames), las = 2)
+      graphics::axis(2, at = (p+1):1, labels = c('Omnibus', xnames), las = 1)
 
-        # Effect Size text
-        graphics::text(x = j, y = p - i + 1 + 1, col = 'white',
-                       labels = formatC(delta.med[i,j], format = 'g', digits = 2),
-                       cex = 0.75)
+      # Convert to z scores for shading
+      z.scores <- matrix(scale(c(delta.med)), nrow = p+1, ncol = q)
+      z.scores[delta.med < 0] <- -9999
+      omni.cols <- stats::pnorm(z.scores[1,])
+      pairwise.cols <- stats::pnorm(z.scores[-1,,drop=F])
+
+      for(i in 1:nrow(delta.med)){
+        for(j in 1:ncol(delta.med)){
+          x.low <- j-0.5
+          y.low <- p-i+1-0.5+1
+          x.up <- j+0.5
+          y.up <- p-i+1+0.5+1
+
+          if(i == 1){
+            # Y importances
+            graphics::rect(x.low, y.low, x.up, y.up,
+                           col = grDevices::rgb(0, 0, 1, omni.cols[j]))
+          }
+          if(i > 1){
+            # XY Importances
+            graphics::rect(x.low, y.low, x.up, y.up,
+                           col = grDevices::rgb(0,0.75,0, pairwise.cols[i-1,j]))
+          }
+
+          # Effect Size text
+          graphics::text(x = j, y = p - i + 1 + 1, col = 'white',
+                         labels = formatC(delta.med[i,j], format = 'g', digits = 2),
+                         cex = 0.75)
+        }
       }
     }
   }
