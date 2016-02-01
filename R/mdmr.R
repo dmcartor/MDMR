@@ -301,6 +301,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
   pr2 <- data.frame('pseudo.Rsq' = c(pr2.omni, pr2.x),
                     row.names = c('Omnibus', xnames[-1]))
 
+
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # ANALYTIC APPROACH TO P-VALUES
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -544,10 +545,20 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
 
 
     # --- Standard Error --- #
-    acc.omni <- sqrt((pv.omni * (1-pv.omni)) / nperm)
-    acc.x <- sqrt((pv.x * (1-pv.x)) / nperm)
+    # Use max of p-values and 1/nperm so that we don't get zero SE's
+    pv.omni.hold <- max(pv.omni, 1/nperm)
+    pv.x.hold <- pmax(pv.x, 1/nperm)
+
+    acc.omni <- sqrt((pv.omni.hold * (1-pv.omni.hold)) / nperm)
+    acc.x <- sqrt((pv.x.hold * (1-pv.x.hold)) / nperm)
     pv.acc <- data.frame('perm.p.SE' = c(acc.omni, acc.x),
                          row.names = c('Omnibus', xnames[-1]))
+    rm(pv.omni.hold, pv.x.hold)
+
+    # --- Fill in LAMBDA with a note if it was requested --- #
+    if(return.lambda){
+      lambda <- 'Eigenvalues are not used in the permutation approach'
+    }
   }
 
 
@@ -1143,3 +1154,4 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
 #'
 #' See package vignette by calling \code{vignette('mdmr-vignette')}.
 "Y.mdmr"
+
