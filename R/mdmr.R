@@ -478,7 +478,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
       # Set seed if not specified: make sure it doesn't overflow
       if(is.null(seed)){
         seed.max <- floor(.Machine$integer.max - 1)
-        seed <- round(runif(1,0,1)*seed.max)
+        seed <- round(stats::runif(1,0,1)*seed.max)
       }
 
       set.seed(seed)
@@ -512,7 +512,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
       if(is.null(seed)){
         max.int <- .Machine$integer.max
         seed.max <- floor((max.int - perm.chunkSize) / perm.nchunk)
-        seed <- round(runif(1,0,1)*seed.max)
+        seed <- round(stats::runif(1,0,1)*seed.max)
       }
 
       # Initialize counter for number of times each permuted test statistic is
