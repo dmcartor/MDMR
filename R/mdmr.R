@@ -8,7 +8,7 @@
 #'
 #' @return G Gower's centered dissimilarity matrix computed from D.
 #'
-#' @author \packageAuthor{MDMR}
+#' @author Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
 #'
 #' @references Gower, J. C. (1966). Some distance properties of latent root and
 #' vector methods used in multivariate analysis. Biometrika, 53(3-4), 325-338.
@@ -123,7 +123,7 @@ gower <- function(d.mat){
 #' of the finite number of permutations conduted. The only conclusion that can
 #' be drawn is that the p-value is smaller than \code{1/nperm}.
 #'
-#' @author \packageAuthor{MDMR}
+#' @author Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
 #'
 #' @references Davies, R. B. (1980). The Distribution of a Linear Combination of
 #'  chi-square Random Variables. Journal of the Royal Statistical Society.
@@ -591,7 +591,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
 #' @return
 #' \item{p-value}{Analytical p-values for the omnibus test and each predictor}
 #'
-#' @author \packageAuthor{MDMR}
+#' @author Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
 #'
 #'
 #' @export
@@ -655,7 +655,7 @@ print.mdmr <- function(x, ...){
 #' of the finite number of permutations conduted. The only conclusion that can
 #' be drawn is that the p-value is smaller than \code{1/nperm}.
 #'
-#' @author \packageAuthor{MDMR}
+#' @author Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
 #'
 #' @references Davies, R. B. (1980). The Distribution of a Linear Combination of
 #'  chi-square Random Variables. Journal of the Royal Statistical Society.
@@ -786,7 +786,7 @@ summary.mdmr <- function(object, ...){
 #' (remaining rows), because otherwise the omnibus effect would dominate the
 #' heatmap.
 #'
-#' @author \packageAuthor{MDMR}
+#' @author Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
 #'
 #' @references  McArtor, D.B. & Lubke, G.H. (submitted). Extending
 #' multivariate distance matrix regression with an effect size measure and the

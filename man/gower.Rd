@@ -18,7 +18,7 @@ Compute Gower's centered similarity matrix \eqn{G}, which is the matrix
 decomposed by the MDMR test statistic.
 }
 \author{
-\packageAuthor{MDMR}
+Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
 }
 \references{
 Gower, J. C. (1966). Some distance properties of latent root and

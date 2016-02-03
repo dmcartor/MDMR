@@ -18,6 +18,6 @@
 \code{print} method for class \code{mdmr}
 }
 \author{
-\packageAuthor{MDMR}
+Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
 }
 

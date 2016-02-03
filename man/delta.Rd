@@ -104,7 +104,7 @@ delta(X.mdmr, G = G, G.list = G.list)
 
 }
 \author{
-\packageAuthor{MDMR}
+Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
 }
 \references{
 McArtor, D.B. & Lubke, G.H. (submitted). Extending

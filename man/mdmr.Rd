@@ -120,7 +120,7 @@ mdmr(X = X.mdmr, G = G)
 
 }
 \author{
-\packageAuthor{MDMR}
+Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
 }
 \references{
 Davies, R. B. (1980). The Distribution of a Linear Combination of
