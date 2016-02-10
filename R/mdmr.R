@@ -155,9 +155,9 @@ gower <- function(d.mat){
 #' @importFrom parallel mclapply
 #' @export
 mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
-                  start.acc = 1e-20, ncores = 1,
-                  perm.p = (nrow(as.matrix(X)) < 200),
-                  nperm = 500, seed = NULL){
+                 start.acc = 1e-20, ncores = 1,
+                 perm.p = (nrow(as.matrix(X)) < 200),
+                 nperm = 500, seed = NULL){
   # Make sure "D" is not interpreted as the D function
   if(is.function(D)){
     stop(paste0('Please provide either a distance matrix or a ',
@@ -721,8 +721,6 @@ summary.mdmr <- function(object, ...){
 #' element contains the \code{G} matrix computed from distance a matrix that
 #' was computed on a version of \code{Y} where the \eqn{i^{th}}
 #' column has been randomly permuted.
-#' @param plot.res Logical; Indicates whether or not a heat-map of the results
-#' should be plotted.
 #' @param ncores Integer; if \code{ncores} > 1, the \code{\link{parallel}}
 #' package is used to speed computation. Note: Windows users must set
 #' \code{ncores = 1} because the \code{parallel} pacakge relies on forking. See
@@ -730,6 +728,10 @@ summary.mdmr <- function(object, ...){
 #' \code{parallel} pacakge for more details.
 #' @param seed Integer; sets seed for the permutations of each variable
 #' comprising Y so that results can be replicated.
+#' @param plot.res Logical; Indicates whether or not a heat-map of the results
+#' should be plotted.
+#' @param grayscale Logical; Indicates whether or not the heat-map should be
+#' plotted in grayscale
 #'
 #' @return A data frame whose rows correspond to the omnibus effects and the
 #' effect of each individual predictor (conditional on the rest), and whose
@@ -767,8 +769,8 @@ summary.mdmr <- function(object, ...){
 #' @export
 #' @importFrom parallel mclapply
 delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
-                   G = NULL, G.list = NULL, plot.res = F,
-                   ncores = 1, seed = NULL){
+                  G = NULL, G.list = NULL, ncores = 1, seed = NULL,
+                  plot.res = F, grayscale = F){
   # ============================================================================
   # Step 1: Check input type
   # ============================================================================
@@ -1034,6 +1036,14 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
   # Step 5: Plot
   # ============================================================================
   if(plot.res){
+    par(oma = c(2,2,0,0))
+    red <- 1
+    green <- 1
+    blue <- 1
+    if(grayscale){
+      red <- green <- blue <- 0
+    }
+
     # Case 1: Univaraite X
     if(p == 1){
       if(q == 1){
@@ -1060,7 +1070,8 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
 
           # Y importances
           graphics::rect(x.low, y.low, x.up, y.up,
-                         col = grDevices::rgb(0, 0, 1, omni.cols[j]))
+                         col = grDevices::rgb(0*red, 0*green, 1*blue,
+                                              omni.cols[j]))
 
 
           # Effect Size text
@@ -1094,12 +1105,14 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
           if(i == 1){
             # Y importances
             graphics::rect(x.low, y.low, x.up, y.up,
-                           col = grDevices::rgb(0, 0, 1, omni.cols[j]))
+                           col = grDevices::rgb(0*red, 0*green, 1*blue,
+                                                omni.cols[j]))
           }
           if(i > 1){
             # XY Importances
             graphics::rect(x.low, y.low, x.up, y.up,
-                           col = grDevices::rgb(0,0.75,0, pairwise.cols[i-1,j]))
+                           col = grDevices::rgb(0*red, 0.75*green, 0*blue,
+                                                pairwise.cols[i-1,j]))
           }
 
           # Effect Size text

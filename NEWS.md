@@ -1,6 +1,7 @@
 # MDMR 0.3.1
 
 * Substantial improvement to computation time
+* Updated delta() with an option to plot results in grayscale
 
 # MDMR 0.3.0
 
