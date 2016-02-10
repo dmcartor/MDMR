@@ -5,7 +5,7 @@
 \title{Compute univariate MDMR effect sizes}
 \usage{
 delta(X, Y = NULL, dtype = NULL, niter = 10, G = NULL, G.list = NULL,
-  ncores = 1, seed = NULL, plot.res = F, grayscale = F)
+  ncores = 1, seed = NULL, plot.res = F, grayscale = F, cex = 1)
 }
 \arguments{
 \item{X}{A \eqn{n x p} matrix or data frame of predictors. Factors are
@@ -46,7 +46,10 @@ comprising Y so that results can be replicated.}
 should be plotted.}
 
 \item{grayscale}{Logical; Indicates whether or not the heat-map should be
-plotted in grayscale}
+plotted in grayscale.}
+
+\item{cex}{Multiplier for cex.axis, cex.lab, cex.main, and cex that are
+passed to the plotted result.}
 }
 \value{
 A data frame whose rows correspond to the omnibus effects and the

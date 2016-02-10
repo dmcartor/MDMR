@@ -731,7 +731,9 @@ summary.mdmr <- function(object, ...){
 #' @param plot.res Logical; Indicates whether or not a heat-map of the results
 #' should be plotted.
 #' @param grayscale Logical; Indicates whether or not the heat-map should be
-#' plotted in grayscale
+#' plotted in grayscale.
+#' @param cex Multiplier for cex.axis, cex.lab, cex.main, and cex that are
+#' passed to the plotted result.
 #'
 #' @return A data frame whose rows correspond to the omnibus effects and the
 #' effect of each individual predictor (conditional on the rest), and whose
@@ -770,7 +772,7 @@ summary.mdmr <- function(object, ...){
 #' @importFrom parallel mclapply
 delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
                   G = NULL, G.list = NULL, ncores = 1, seed = NULL,
-                  plot.res = F, grayscale = F){
+                  plot.res = F, grayscale = F, cex = 1){
   # ============================================================================
   # Step 1: Check input type
   # ============================================================================
@@ -1036,7 +1038,6 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
   # Step 5: Plot
   # ============================================================================
   if(plot.res){
-    par(oma = c(2,2,0,0))
     red <- 1
     green <- 1
     blue <- 1
@@ -1053,9 +1054,12 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
       if(q > 1){
         graphics::plot(NA, xlim = c(0.5, q+0.5), ylim = c(0.5,p+0.5), xaxt = 'n',
                        yaxt = 'n',  xlab = '', ylab = '', bty = 'n',
-                       main = 'MDMR Effect Sizes')
-        graphics::axis(1, at = 1:q, labels = c(ynames), las = 2)
-        graphics::axis(2, at = (p):1, labels = c('Omnibus'), las = 1)
+                       main = 'MDMR Effect Sizes',
+                       cex.axis = cex, cex.lab = cex, cex = cex, cex.main = cex)
+        graphics::axis(1, at = 1:q, labels = c(ynames), las = 2,
+                       cex.axis = cex, cex.lab = cex)
+        graphics::axis(2, at = (p):1, labels = c('Omnibus'), las = 1,
+                       cex.axis = cex, cex.lab = cex)
 
         # --- Convert to z scores for shading --- #
         z.scores <- matrix(scale(c(delta.med[1,])), nrow = p, ncol = q)
@@ -1077,7 +1081,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
           # Effect Size text
           graphics::text(x = j, y = 1, col = 'white',
                          labels = formatC(delta.med[1,j], format = 'g', digits = 2),
-                         cex = 0.75)
+                         cex = cex*0.8)
         }
       }
     }
@@ -1085,9 +1089,12 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
     if(p > 1){
       graphics::plot(NA, xlim = c(0.5, q+0.5), ylim = c(0.5,p+0.5+1), xaxt = 'n',
                      yaxt = 'n',  xlab = '', ylab = '', bty = 'n',
-                     main = 'MDMR Effect Sizes')
-      graphics::axis(1, at = 1:q, labels = c(ynames), las = 2)
-      graphics::axis(2, at = (p+1):1, labels = c('Omnibus', xnames), las = 1)
+                     main = 'MDMR Effect Sizes',
+                     cex.axis = cex, cex.lab = cex, cex = cex, cex.main = cex)
+      graphics::axis(1, at = 1:q, labels = c(ynames), las = 2,
+                     cex.axis = cex, cex.lab = cex)
+      graphics::axis(2, at = (p+1):1, labels = c('Omnibus', xnames), las = 1,
+                     cex.axis = cex, cex.lab = cex)
 
       # Convert to z scores for shading
       z.scores <- matrix(scale(c(delta.med)), nrow = p+1, ncol = q)
@@ -1118,7 +1125,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
           # Effect Size text
           graphics::text(x = j, y = p - i + 1 + 1, col = 'white',
                          labels = formatC(delta.med[i,j], format = 'g', digits = 2),
-                         cex = 0.75)
+                         cex = 0.8*cex)
         }
       }
     }
