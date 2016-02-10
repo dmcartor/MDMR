@@ -734,6 +734,9 @@ summary.mdmr <- function(object, ...){
 #' plotted in grayscale.
 #' @param cex Multiplier for cex.axis, cex.lab, cex.main, and cex that are
 #' passed to the plotted result.
+#' @param out.las Orientation of labels for the outcome items. Defaults to
+#' vertical (2). Value of 1 prints horizontal labels, and is only recommended
+#' if the multivariate outcome is comprised of few variables.
 #'
 #' @return A data frame whose rows correspond to the omnibus effects and the
 #' effect of each individual predictor (conditional on the rest), and whose
@@ -772,7 +775,7 @@ summary.mdmr <- function(object, ...){
 #' @importFrom parallel mclapply
 delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
                   G = NULL, G.list = NULL, ncores = 1, seed = NULL,
-                  plot.res = F, grayscale = F, cex = 1){
+                  plot.res = F, grayscale = F, cex = 1, y.las = 2){
   # ============================================================================
   # Step 1: Check input type
   # ============================================================================
@@ -1056,7 +1059,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
                        yaxt = 'n',  xlab = '', ylab = '', bty = 'n',
                        main = 'MDMR Effect Sizes',
                        cex.axis = cex, cex.lab = cex, cex = cex, cex.main = cex)
-        graphics::axis(1, at = 1:q, labels = c(ynames), las = 2,
+        graphics::axis(1, at = 1:q, labels = c(ynames), las = y.las,
                        cex.axis = cex, cex.lab = cex)
         graphics::axis(2, at = (p):1, labels = c('Omnibus'), las = 1,
                        cex.axis = cex, cex.lab = cex)
@@ -1091,7 +1094,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
                      yaxt = 'n',  xlab = '', ylab = '', bty = 'n',
                      main = 'MDMR Effect Sizes',
                      cex.axis = cex, cex.lab = cex, cex = cex, cex.main = cex)
-      graphics::axis(1, at = 1:q, labels = c(ynames), las = 2,
+      graphics::axis(1, at = 1:q, labels = c(ynames), las = y.las,
                      cex.axis = cex, cex.lab = cex)
       graphics::axis(2, at = (p+1):1, labels = c('Omnibus', xnames), las = 1,
                      cex.axis = cex, cex.lab = cex)

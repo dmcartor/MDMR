@@ -5,7 +5,8 @@
 \title{Compute univariate MDMR effect sizes}
 \usage{
 delta(X, Y = NULL, dtype = NULL, niter = 10, G = NULL, G.list = NULL,
-  ncores = 1, seed = NULL, plot.res = F, grayscale = F, cex = 1)
+  ncores = 1, seed = NULL, plot.res = F, grayscale = F, cex = 1,
+  y.las = 2)
 }
 \arguments{
 \item{X}{A \eqn{n x p} matrix or data frame of predictors. Factors are
@@ -50,6 +51,10 @@ plotted in grayscale.}
 
 \item{cex}{Multiplier for cex.axis, cex.lab, cex.main, and cex that are
 passed to the plotted result.}
+
+\item{out.las}{Orientation of labels for the outcome items. Defaults to
+vertical (2). Value of 1 prints horizontal labels, and is only recommended
+if the multivariate outcome is comprised of few variables.}
 }
 \value{
 A data frame whose rows correspond to the omnibus effects and the
