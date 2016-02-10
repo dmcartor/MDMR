@@ -5,7 +5,7 @@
 \title{Compute univariate MDMR effect sizes}
 \usage{
 delta(X, Y = NULL, dtype = NULL, niter = 10, G = NULL, G.list = NULL,
-  plot.res = F, ncores = 1, seed = NULL)
+  ncores = 1, seed = NULL, plot.res = F, grayscale = F)
 }
 \arguments{
 \item{X}{A \eqn{n x p} matrix or data frame of predictors. Factors are
@@ -33,9 +33,6 @@ element contains the \code{G} matrix computed from distance a matrix that
 was computed on a version of \code{Y} where the \eqn{i^{th}}
 column has been randomly permuted.}
 
-\item{plot.res}{Logical; Indicates whether or not a heat-map of the results
-should be plotted.}
-
 \item{ncores}{Integer; if \code{ncores} > 1, the \code{\link{parallel}}
 package is used to speed computation. Note: Windows users must set
 \code{ncores = 1} because the \code{parallel} pacakge relies on forking. See
@@ -44,6 +41,12 @@ package is used to speed computation. Note: Windows users must set
 
 \item{seed}{Integer; sets seed for the permutations of each variable
 comprising Y so that results can be replicated.}
+
+\item{plot.res}{Logical; Indicates whether or not a heat-map of the results
+should be plotted.}
+
+\item{grayscale}{Logical; Indicates whether or not the heat-map should be
+plotted in grayscale}
 }
 \value{
 A data frame whose rows correspond to the omnibus effects and the
