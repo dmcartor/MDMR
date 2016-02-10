@@ -1,3 +1,7 @@
+# MDMR 0.3.1
+
+* Substantial improvement to computation time
+
 # MDMR 0.3.0
 
 * Added an option to compute permutation-based p-values to mdmr()

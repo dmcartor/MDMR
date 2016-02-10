@@ -155,9 +155,9 @@ gower <- function(d.mat){
 #' @importFrom parallel mclapply
 #' @export
 mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
-                 start.acc = 1e-20, ncores = 1,
-                 perm.p = (nrow(as.matrix(X)) < 200),
-                 nperm = 500, seed = NULL){
+                  start.acc = 1e-20, ncores = 1,
+                  perm.p = (nrow(as.matrix(X)) < 200),
+                  nperm = 500, seed = NULL){
   # Make sure "D" is not interpreted as the D function
   if(is.function(D)){
     stop(paste0('Please provide either a distance matrix or a ',
@@ -199,28 +199,9 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
 
   # Computational trick: H is idempotent, so H = HH. tr(ABC) = tr(CAB), so
   # tr(HGH) = tr(HHG) = tr(HG). Also, tr(AB) = vec(A)'vec(B), so
-  vh <- matrix(H, nrow = 1)
-  vg <- matrix(G, ncol = 1)
-
-  # -- Do the computation in chunks to not overload memory -- #
-  # (This approach is also faster than doing the whole multiplication at once)
-  len <- ncol(vh)
-  # minimum chunk size is 3000^2 or n^2. Even my personal laptop has no problems
-  # with this size
-  chunksize <- min(len, 3000^2)
-  # Set number of chunks, and make sure the last chunk isn't too big or small
-  nchunk <- ceiling(len/chunksize)
-  chunkEnd <- seq(chunksize, nchunk*chunksize, chunksize)
-  chunkEnd[nchunk] <- len
-
-  # Start the computation then iterate over all chunks
-  numer <- vh[,1:chunksize] %*% vg[1:chunksize,]
-  if(nchunk>1){
-    for(i in 2:nchunk){
-      ind <- (chunkEnd[i-1]+1):chunkEnd[i]
-      numer <- numer + vh[,ind] %*% vg[ind,]
-    }
-  }
+  vh <- c(H)
+  vg <- c(G)
+  numer <- crossprod(vh, vg)
 
   # Numerical trick: tr((I-H)G(I-H)) = tr(G) - tr(HGH), so
   trG <- sum(diag(G))
@@ -241,19 +222,12 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
     Hs <- lapply(2:(p+1), function(k){
       Xs <- X[,-k]
       Hs <- tcrossprod(tcrossprod(Xs, solve(crossprod(Xs))), Xs)
-      matrix(H - Hs, nrow = 1)
+      c(H - Hs)
     })
 
     # Compute SSD due to conditional effect
     numer.x <- unlist(lapply(Hs, function(vhs){
-      numer <- vhs[,1:chunksize] %*% vg[1:chunksize,]
-      if(nchunk>1){
-        for(i in 2:nchunk){
-          ind <- (chunkEnd[i-1]+1):chunkEnd[i]
-          numer <- numer + vhs[,ind] %*% vg[ind,]
-        }
-      }
-      numer
+      crossprod(vhs, vg)
     }))
 
     # Rescale to get either test statistic or pseudo r-square
@@ -268,7 +242,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
     Hs <- parallel::mclapply(2:(p+1), function(k){
       Xs <- X[,-k]
       Hs <- tcrossprod(tcrossprod(Xs, solve(crossprod(Xs))), Xs)
-      matrix(H - Hs, nrow = 1)
+      c(H - Hs)
     },
     mc.preschedule = TRUE, mc.set.seed = TRUE,
     mc.silent = FALSE, mc.cores = ncores,
@@ -276,14 +250,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
 
     # Compute SSD due to conditional effect
     numer.x <- unlist(parallel::mclapply(Hs, function(vhs){
-      numer <- vhs[,1:chunksize] %*% vg[1:chunksize,]
-      if(nchunk>1){
-        for(i in 2:nchunk){
-          ind <- (chunkEnd[i-1]+1):chunkEnd[i]
-          numer <- numer + vhs[,ind] %*% vg[ind,]
-        }
-      }
-      numer
+      crossprod(vhs, vg)
     },
     mc.preschedule = TRUE, mc.set.seed = TRUE,
     mc.silent = FALSE, mc.cores = ncores,
@@ -435,14 +402,8 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
 
       # OMNIBUS
       H.perm <- tcrossprod(tcrossprod(X.perm, solve(crossprod(X.perm))), X.perm)
-      vh.perm <- matrix(H.perm, nrow = 1)
-      numer.perm <- vh.perm[,1:chunksize] %*% vg[1:chunksize,]
-      if(nchunk>1){
-        for(i in 2:nchunk){
-          ind <- (chunkEnd[i-1]+1):chunkEnd[i]
-          numer.perm <- numer.perm + vh.perm[,ind] %*% vg[ind,]
-        }
-      }
+      vh.perm <- c(H.perm)
+      numer.perm <- crossprod(vh.perm, vg)
       denom.perm <- trG - numer.perm
       f.omni.perm <- numer.perm / denom.perm
 
@@ -451,18 +412,11 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
         Xs.perm <- X.perm[,-k]
         Hs.perm <- tcrossprod(
           tcrossprod(Xs.perm, solve(crossprod(Xs.perm))), Xs.perm)
-        matrix(H.perm - Hs.perm, nrow = 1)
+        c(H.perm)
       })
 
       numer.x.perm <- unlist(lapply(Hs.perm, function(vhs.perm){
-        numer.perm <- vhs.perm[,1:chunksize] %*% vg[1:chunksize,]
-        if(nchunk>1){
-          for(i in 2:nchunk){
-            ind <- (chunkEnd[i-1]+1):chunkEnd[i]
-            numer.perm <- numer.perm + vhs.perm[,ind] %*% vg[ind,]
-          }
-        }
-        numer.perm
+        crossprod(vhs.perm, vg)
       }))
 
       f.x.perm <- numer.x.perm / denom.perm
@@ -813,8 +767,8 @@ summary.mdmr <- function(object, ...){
 #' @export
 #' @importFrom parallel mclapply
 delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
-                  G = NULL, G.list = NULL, plot.res = F,
-                  ncores = 1, seed = NULL){
+                   G = NULL, G.list = NULL, plot.res = F,
+                   ncores = 1, seed = NULL){
   # ============================================================================
   # Step 1: Check input type
   # ============================================================================
@@ -850,25 +804,24 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
   # Overall hat matrix
   X.hat <- cbind(1, X)
   H <- tcrossprod(tcrossprod(X.hat, solve(crossprod(X.hat))), X.hat)
-  vh <- matrix(H, nrow = 1)
-
-  # Do the computation in chunks to not overload memory
-  len <- ncol(vh)
-  chunksize <- min(len, 3000^2)
-  nchunk <- ceiling(len/chunksize)
-  chunkEnd <- seq(chunksize, nchunk*chunksize, chunksize)
-  chunkEnd[nchunk] <- len
+  vh <- c(H)
 
   # Hat matrices for each conditional effect
-  Xs <- lapply(2:(p+1), function(i){
-    X.hat[,-i]
-  })
-  Hs <- lapply(Xs, function(x){
-    H - tcrossprod(tcrossprod(x, solve(crossprod(x))), x)
-  })
-  vhs <- lapply(Hs, function(h){
-    matrix(h, nrow = 1)
-  })
+  if(ncores == 1){
+    vhs <- lapply(2:(p+1), FUN = function(i){
+      xx <- X.hat[,-i]
+      hh <- H - tcrossprod(tcrossprod(xx, solve(crossprod(xx))), xx)
+      c(hh)
+    })
+  }
+  if(ncores > 1){
+    vhs <- parallel::mclapply(2:(p+1), mc.cores = ncores, FUN = function(i){
+      xx <- X.hat[,-i]
+      hh <- H - tcrossprod(tcrossprod(xx, solve(crossprod(xx))), xx)
+      c(hh)
+    })
+  }
+
 
   # ----- FUNCTION TO COMPUTE PSEUDO-R-SQUARE WITHIN THIS RUN OF DELTA ----- #
 
@@ -877,15 +830,8 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
     # =========================== Omnibus Test =============================== #
     # Computational trick: H is idempotent, so H = HH. tr(ABC) = tr(CAB), so
     # tr(HGH) = tr(HHG) = tr(HG). Also, tr(AB) = vec(A)'vec(B), so
-    vg <- matrix(G, ncol = 1)
-    # Start the computation then iterate over all chunks
-    numer <- vh[,1:chunksize] %*% vg[1:chunksize,]
-    if(nchunk>1){
-      for(i in 2:nchunk){
-        ind <- (chunkEnd[i-1]+1):chunkEnd[i]
-        numer <- numer + vh[,ind] %*% vg[ind,]
-      }
-    }
+    vg <- c(G)
+    numer <- crossprod(vh, vg)
 
     # pseudo-R2 is defined as tr(HGH)/tr(G), so
     denom <- sum(diag(G))
@@ -895,14 +841,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
 
     # ===================== Tests of Each Predictor ========================== #
     numer.x <- unlist(lapply(1:p, function(k){
-      numer <- vhs[[k]][,1:chunksize] %*% vg[1:chunksize,]
-      if(nchunk>1){
-        for(i in 2:nchunk){
-          ind <- (chunkEnd[i-1]+1):chunkEnd[i]
-          numer <- numer + vhs[[k]][,ind] %*% vg[ind,]
-        }
-      }
-      numer
+      crossprod(vhs[[k]], vg)
     }))
 
     r2.x <- numer.x / denom
@@ -1113,23 +1052,23 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
         z.scores[delta.med[1,] < 0] <- -9999
         omni.cols <- stats::pnorm(z.scores[1,])
 
-          for(j in 1:ncol(delta.med)){
-            x.low <- j-0.5
-            y.low <- p-0.5
-            x.up <- j+0.5
-            y.up <- p+0.5
+        for(j in 1:ncol(delta.med)){
+          x.low <- j-0.5
+          y.low <- p-0.5
+          x.up <- j+0.5
+          y.up <- p+0.5
 
-              # Y importances
-              graphics::rect(x.low, y.low, x.up, y.up,
-                             col = grDevices::rgb(0, 0, 1, omni.cols[j]))
+          # Y importances
+          graphics::rect(x.low, y.low, x.up, y.up,
+                         col = grDevices::rgb(0, 0, 1, omni.cols[j]))
 
 
-            # Effect Size text
-            graphics::text(x = j, y = 1, col = 'white',
-                           labels = formatC(delta.med[1,j], format = 'g', digits = 2),
-                           cex = 0.75)
-          }
+          # Effect Size text
+          graphics::text(x = j, y = 1, col = 'white',
+                         labels = formatC(delta.med[1,j], format = 'g', digits = 2),
+                         cex = 0.75)
         }
+      }
     }
     # Case 2: Multivariate X
     if(p > 1){
