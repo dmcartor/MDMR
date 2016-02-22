@@ -895,7 +895,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
     Y <- as.matrix(Y)
     q <- ncol(Y)
     if(is.null(y.inds)){y.inds <- 1:q}
-    if(any(x.inds > q)){stop(paste0('y.inds must be between 1 and ncol(Y)'))}
+    if(any(y.inds > q)){stop(paste0('y.inds must be between 1 and ncol(Y)'))}
     ynames <- colnames(data.frame(Y))
     if(all(ynames == paste0('X', 1:q))){
       ynames <- paste0('Y', 1:q)
