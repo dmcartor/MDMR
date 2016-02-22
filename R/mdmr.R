@@ -802,6 +802,9 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
   if(!is.null(G.list)){
     # Set the method to list (see below)
     method <- 'list'
+    if(!is.null(y.inds)){
+      warning('y.inds is ignored if G.list is supplied.')
+    }
   }
 
   # Handle potential factors, no-named variables
@@ -812,6 +815,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
 
   # Which variables are to be tested?
   if(is.null(x.inds)){x.inds <- 1:p}
+  if(any(x.inds > p)){stop(paste0('x.inds must be between 1 and ncol(X)'))}
 
   # ============================================================================
   # Step 2: Function to compute pseudo R-square (it's done a lot here with the
@@ -825,7 +829,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
   vh <- c(H)
 
   # Hat matrices for each conditional effect that we're testing
-  if(x.inds != 0){x.inds <- x.inds + 1}
+  if(all(x.inds != 0)){x.inds <- x.inds + 1}
 
   # Populate
   if(ncores == 1){
@@ -891,6 +895,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
     Y <- as.matrix(Y)
     q <- ncol(Y)
     if(is.null(y.inds)){y.inds <- 1:q}
+    if(any(x.inds > q)){stop(paste0('y.inds must be between 1 and ncol(Y)'))}
     ynames <- colnames(data.frame(Y))
     if(all(ynames == paste0('X', 1:q))){
       ynames <- paste0('Y', 1:q)
@@ -998,10 +1003,11 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
       }
     }
 
+    # === Trim out results to only the requested X and Y variables === #
+    delta.med <- delta.med[c(1, x.inds), y.inds, drop = F]
   }
 
-  # === Trim out results to only the requested X and Y variables === #
-  delta.med <- delta.med[c(1, x.inds), y.inds, drop = F]
+
 
   # ============================================================================
   # Step 4: Computation if list of distance matrices is provided
@@ -1011,7 +1017,6 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
     # ----- Manage Input ----- #
     X <- as.matrix(X)
     xnames <- colnames(data.frame(X))
-    p <- ncol(X)
     q <- length(G.list)
 
     ynames <- names(G.list)
@@ -1019,8 +1024,6 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
       ynames <- paste0('Y', 1:q)
     }
 
-
-    n <- nrow(X)
 
     # ----- Populate delta matrices using jackknife procedure ----- #
     # Get the "real" pseudo R-square
@@ -1067,6 +1070,9 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
 
     # --- In this case, there's only one rep, so the median is the single rep
     delta.med <- jack.pr2
+
+    # === Trim out results to only the requested X and Y variables === #
+    delta.med <- delta.med[c(1, x.inds),, drop = F]
   }
 
 
@@ -1076,6 +1082,9 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
   if(plot.res){
     # Number of outcome items to display
     q <- length(y.inds)
+    if(q == 0){
+      q <- length(G.list)
+    }
 
     # colors
     red <- 1
@@ -1131,10 +1140,10 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
 
       # Number of conditional effects to display
       p <- length(x.inds)
-      if(x.inds == 0){
+      if(all(x.inds == 0)){
         p <- 0
         xnames <- NULL
-        }
+      }
 
       graphics::plot(NA, xlim = c(0.5, q+0.5), ylim = c(0.5,p+0.5+1), xaxt = 'n',
                      yaxt = 'n',  xlab = '', ylab = '', bty = 'n',
