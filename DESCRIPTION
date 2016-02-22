@@ -1,8 +1,8 @@
 Package: MDMR
 Type: Package
 Title: Multivariate Distance Matrix Regression
-Version: 0.3.1
-Date: 2016-02-03
+Version: 0.3.2
+Date: 2016-02-22
 Author: Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
 Maintainer: Daniel B. McArtor <dmcartor@nd.edu>
 Description: Allows a user to conduct multivariate distance matrix regression using analytic p-values and compute measures of effect size.
