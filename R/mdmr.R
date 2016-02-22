@@ -812,6 +812,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
 
   # Which variables are to be tested?
   if(is.null(x.inds)){x.inds <- 1:p}
+  if(any(x.inds > p)){stop(paste0('x.inds must be between 1 and ncol(X)'))}
 
   # ============================================================================
   # Step 2: Function to compute pseudo R-square (it's done a lot here with the
@@ -891,6 +892,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
     Y <- as.matrix(Y)
     q <- ncol(Y)
     if(is.null(y.inds)){y.inds <- 1:q}
+    if(any(x.inds > q)){stop(paste0('y.inds must be between 1 and ncol(Y)'))}
     ynames <- colnames(data.frame(Y))
     if(all(ynames == paste0('X', 1:q))){
       ynames <- paste0('Y', 1:q)
@@ -1134,7 +1136,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
       if(x.inds == 0){
         p <- 0
         xnames <- NULL
-        }
+      }
 
       graphics::plot(NA, xlim = c(0.5, q+0.5), ylim = c(0.5,p+0.5+1), xaxt = 'n',
                      yaxt = 'n',  xlab = '', ylab = '', bty = 'n',
