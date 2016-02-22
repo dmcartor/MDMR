@@ -715,6 +715,14 @@ summary.mdmr <- function(object, ...){
 #' to compute delta. The final result is the average of all \code{niter}
 #' iterations. Higher values of \code{niter} require more computation time, but
 #' result in more precise estimates.
+#' @param x.inds Vector indicating which columns of X should have their
+#' conditional effect sizes computed. Default value of \code{NULL} results in
+#' all effects being computed, and a value of \code{0} results in no conditional
+#' effects being computed, such that only the omnibus effect sizes will be
+#' reported.
+#' @param y.inds Vector indicating which columns of Y effect sizes should be
+#' computed on. Default value of \code{NULL} results in all columns being
+#' used.
 #' @param G Gower's centered similarity matrix computed from \code{D}.
 #' Either \code{D} or \code{G} must be passed to \code{mdmr()}.
 #' @param G.list List of length \eqn{q} where the \eqn{i^{th}}
@@ -774,6 +782,7 @@ summary.mdmr <- function(object, ...){
 #' @export
 #' @importFrom parallel mclapply
 delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
+                  x.inds = NULL, y.inds = NULL,
                   G = NULL, G.list = NULL, ncores = 1, seed = NULL,
                   plot.res = F, grayscale = F, cex = 1, y.las = 2){
   # ============================================================================
@@ -801,6 +810,8 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
   p <- ncol(X)
   n <- nrow(X)
 
+  # Which variables are to be tested?
+  if(is.null(x.inds)){x.inds <- 1:p}
 
   # ============================================================================
   # Step 2: Function to compute pseudo R-square (it's done a lot here with the
@@ -813,18 +824,27 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
   H <- tcrossprod(tcrossprod(X.hat, solve(crossprod(X.hat))), X.hat)
   vh <- c(H)
 
-  # Hat matrices for each conditional effect
+  # Hat matrices for each conditional effect that we're testing
+  if(x.inds != 0){x.inds <- x.inds + 1}
+
+  # Populate
   if(ncores == 1){
     vhs <- lapply(2:(p+1), FUN = function(i){
-      xx <- X.hat[,-i]
-      hh <- H - tcrossprod(tcrossprod(xx, solve(crossprod(xx))), xx)
+      hh <- NA
+      if(i %in% x.inds){
+        xx <- X.hat[,-i]
+        hh <- H - tcrossprod(tcrossprod(xx, solve(crossprod(xx))), xx)
+      }
       c(hh)
     })
   }
   if(ncores > 1){
     vhs <- parallel::mclapply(2:(p+1), mc.cores = ncores, FUN = function(i){
-      xx <- X.hat[,-i]
-      hh <- H - tcrossprod(tcrossprod(xx, solve(crossprod(xx))), xx)
+      hh <- NA
+      if(i %in% x.inds){
+        xx <- X.hat[,-i]
+        hh <- H - tcrossprod(tcrossprod(xx, solve(crossprod(xx))), xx)
+      }
       c(hh)
     })
   }
@@ -848,7 +868,11 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
 
     # ===================== Tests of Each Predictor ========================== #
     numer.x <- unlist(lapply(1:p, function(k){
-      crossprod(vhs[[k]], vg)
+      num <- NA
+      if(k %in% (x.inds-1)){
+        num <- crossprod(vhs[[k]], vg)
+      }
+      num
     }))
 
     r2.x <- numer.x / denom
@@ -866,14 +890,13 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
     # ----- Manage Input ----- #
     Y <- as.matrix(Y)
     q <- ncol(Y)
+    if(is.null(y.inds)){y.inds <- 1:q}
     ynames <- colnames(data.frame(Y))
     if(all(ynames == paste0('X', 1:q))){
       ynames <- paste0('Y', 1:q)
     }
 
     G <- gower(stats::dist(Y, method = dtype))
-
-    n <- nrow(X)
 
     # ----- Populate delta matrices using jackknife procedure ----- #
     # Get the "real" pseudo R-square
@@ -894,9 +917,13 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
                    y.jack[,k] <- sample(y.jack[,k], size = n, replace = F)
                    y.jack
                  })
-                 res <- lapply(jackknifed.y, function(yy){
-                   GG <- gower(stats::dist(yy, method = dtype))
-                   pseudo.r2(GG)
+                 res <- lapply(1:q, function(k){
+                   pr2.jack <- rep(NA, p+1)
+                   if(k %in% y.inds){
+                     GG <- gower(stats::dist(jackknifed.y[[k]], method = dtype))
+                     pr2.jack <- pseudo.r2(GG)
+                   }
+                   pr2.jack
                  })
                  res <- matrix(unlist(res), nrow = p+1, ncol = q)
                  dimnames(res) <- list(c('Omnibus', xnames),
@@ -925,27 +952,30 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
 
       # Compute pseudo R-square with each item jackknifed "niter" times
       jack.pr2 <-
-        parallel::mclapply(1:niter,
-                           function(i){
-                             set.seed(seed+i)
-                             jackknifed.y <- lapply(1:q, function(k){
-                               y.jack <- Y
-                               y.jack[,k] <- sample(y.jack[,k], size = n,
-                                                    replace = F)
-                               y.jack
-                             })
-                             res <- lapply(jackknifed.y, function(yy){
-                               GG <- gower(stats::dist(yy, method = dtype))
-                               pseudo.r2(GG)
-                             })
-                             res <- matrix(unlist(res), nrow = p+1, ncol = q)
-                             dimnames(res) <- list(c('Omnibus', xnames),
-                                                   paste0(ynames, '.jack'))
-                             res
-                           },
-                           mc.preschedule = TRUE, mc.set.seed = TRUE,
-                           mc.silent = FALSE, mc.cores = ncores,
-                           mc.cleanup = TRUE, mc.allow.recursive = TRUE)
+        parallel::mclapply(1:niter, function(i){
+          set.seed(seed+i)
+          jackknifed.y <- lapply(1:q, function(k){
+            y.jack <- Y
+            y.jack[,k] <- sample(y.jack[,k], size = n,
+                                 replace = F)
+            y.jack
+          })
+          res <- lapply(1:q, function(k){
+            pr2.jack <- rep(NA, p+1)
+            if(k %in% y.inds){
+              GG <- gower(stats::dist(jackknifed.y[[k]], method = dtype))
+              pr2.jack <- pseudo.r2(GG)
+            }
+            pr2.jack
+          })
+          res <- matrix(unlist(res), nrow = p+1, ncol = q)
+          dimnames(res) <- list(c('Omnibus', xnames),
+                                paste0(ynames, '.jack'))
+          res
+        },
+        mc.preschedule = TRUE, mc.set.seed = TRUE,
+        mc.silent = FALSE, mc.cores = ncores,
+        mc.cleanup = TRUE, mc.allow.recursive = TRUE)
 
       # Subtract the jackknifed pseudo R-squares from the real pseudo R-squares
       # to get the delta statistics for each rep
@@ -969,6 +999,9 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
     }
 
   }
+
+  # === Trim out results to only the requested X and Y variables === #
+  delta.med <- delta.med[c(1, x.inds), y.inds, drop = F]
 
   # ============================================================================
   # Step 4: Computation if list of distance matrices is provided
@@ -1041,6 +1074,10 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
   # Step 5: Plot
   # ============================================================================
   if(plot.res){
+    # Number of outcome items to display
+    q <- length(y.inds)
+
+    # colors
     red <- 1
     green <- 1
     blue <- 1
@@ -1059,7 +1096,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
                        yaxt = 'n',  xlab = '', ylab = '', bty = 'n',
                        main = 'MDMR Effect Sizes',
                        cex.axis = cex, cex.lab = cex, cex = cex, cex.main = cex)
-        graphics::axis(1, at = 1:q, labels = c(ynames), las = y.las,
+        graphics::axis(1, at = 1:q, labels = c(ynames[y.inds]), las = y.las,
                        cex.axis = cex, cex.lab = cex)
         graphics::axis(2, at = (p):1, labels = c('Omnibus'), las = 1,
                        cex.axis = cex, cex.lab = cex)
@@ -1088,15 +1125,25 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
         }
       }
     }
+
     # Case 2: Multivariate X
     if(p > 1){
+
+      # Number of conditional effects to display
+      p <- length(x.inds)
+      if(x.inds == 0){
+        p <- 0
+        xnames <- NULL
+        }
+
       graphics::plot(NA, xlim = c(0.5, q+0.5), ylim = c(0.5,p+0.5+1), xaxt = 'n',
                      yaxt = 'n',  xlab = '', ylab = '', bty = 'n',
                      main = 'MDMR Effect Sizes',
                      cex.axis = cex, cex.lab = cex, cex = cex, cex.main = cex)
-      graphics::axis(1, at = 1:q, labels = c(ynames), las = y.las,
+      graphics::axis(1, at = 1:q, labels = c(ynames[y.inds]), las = y.las,
                      cex.axis = cex, cex.lab = cex)
-      graphics::axis(2, at = (p+1):1, labels = c('Omnibus', xnames), las = 1,
+      graphics::axis(2, at = (p+1):1, labels = c('Omnibus', xnames[x.inds-1]),
+                     las = 1,
                      cex.axis = cex, cex.lab = cex)
 
       # Convert to z scores for shading

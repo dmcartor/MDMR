@@ -4,9 +4,9 @@
 \alias{delta}
 \title{Compute univariate MDMR effect sizes}
 \usage{
-delta(X, Y = NULL, dtype = NULL, niter = 10, G = NULL, G.list = NULL,
-  ncores = 1, seed = NULL, plot.res = F, grayscale = F, cex = 1,
-  y.las = 2)
+delta(X, Y = NULL, dtype = NULL, niter = 10, x.inds = NULL,
+  y.inds = NULL, G = NULL, G.list = NULL, ncores = 1, seed = NULL,
+  plot.res = F, grayscale = F, cex = 1, y.las = 2)
 }
 \arguments{
 \item{X}{A \eqn{n x p} matrix or data frame of predictors. Factors are
@@ -25,6 +25,16 @@ to compute the distance matrix based on \code{Y}. As is the case when calling
 to compute delta. The final result is the average of all \code{niter}
 iterations. Higher values of \code{niter} require more computation time, but
 result in more precise estimates.}
+
+\item{x.inds}{Vector indicating which columns of X should have their
+conditional effect sizes computed. Default value of \code{NULL} results in
+all effects being computed, and a value of \code{0} results in no conditional
+effects being computed, such that only the omnibus effect sizes will be
+reported.}
+
+\item{y.inds}{Vector indicating which columns of Y effect sizes should be
+computed on. Default value of \code{NULL} results in all columns being
+used.}
 
 \item{G}{Gower's centered similarity matrix computed from \code{D}.
 Either \code{D} or \code{G} must be passed to \code{mdmr()}.}
