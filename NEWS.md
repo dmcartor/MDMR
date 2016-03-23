@@ -1,3 +1,8 @@
+# MDMR 0.3.3
+
+* Fixed a bug that occurred with missingness on X
+* Added significance indicators to summary.mdmr() that mirror those used by lm()
+
 # MDMR 0.3.2
 
 * Added two arguments to delta() that allow users to specify which effect sizes they are interested in measuring with respect to both predictors (x.inds) and outcomes (y.inds). This was primarily added for situations where there are many predictors, not all of which are found to be statistically significant, and the user is only interested in effect sizes of the significant predictors. Note, however, that the conditional effect sizes reported by delta() are still conditioned on all variables comprising the matrix of predictors even if only a subset of effect sizes are requested to be computed and reported.
