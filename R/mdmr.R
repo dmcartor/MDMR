@@ -183,8 +183,18 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
     G <- gower(D)
   }
 
+  # Remove observations that are misxing on X
+  X.na <- which(rowSums(is.na(X)) > 0)
+  if(length(X.na) > 0){
+    X <- X[-X.na,]
+    G <- G[-X.na, -X.na]
+    warning(paste0(length(X.na),
+                   ' observations removed due to missingness on X.'))
+  }
+
 
   # ======================= Omnibus Test Statistic =========================== #
+
   # Handle potential factors, no-named variables
   X <- stats::model.matrix(~ . , data = as.data.frame(X))
   xnames <- colnames(X)
@@ -264,9 +274,9 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
 
   # --- Combine test statistics and pseudo R-squares --- #
   stat <- data.frame('stat' = c(f.omni, f.x),
-                     row.names = c('Omnibus', xnames[-1]))
+                     row.names = c('Omnibus Effect', xnames[-1]))
   pr2 <- data.frame('pseudo.Rsq' = c(pr2.omni, pr2.x),
-                    row.names = c('Omnibus', xnames[-1]))
+                    row.names = c('Omnibus Effect', xnames[-1]))
 
 
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -315,6 +325,16 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
     # Compute the eigenvalues of G if they were not provided
     if(is.null(lambda)){
       lambda <- eigen(G, only.values = T)$values
+    }
+
+    # Compute adjusted sample size
+    n.tilde <- (n-p-1) * lambda[1] / sum(lambda)
+    if(n.tilde < 75){
+      warning(
+        paste0('Adjusted sample size = ', round(n.tilde), '\n',
+               'Asymptotic properties of the null distribution may not hold.\n',
+               'This can result in overly conservative p-values.\n',
+               'Permutation tests are recommended.'))
     }
 
     # Initiailze accuracy of the Davies algorithm
@@ -379,9 +399,9 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
 
 
     pv <- data.frame('analytic.pvals' = c(pv.omni, pv.x),
-                     row.names = c('Omnibus', xnames[-1]))
+                     row.names = c('Omnibus Effect', xnames[-1]))
     pv.acc <- data.frame('p.max.error' = c(acc.omni, acc.x),
-                         row.names = c('Omnibus', xnames[-1]))
+                         row.names = c('Omnibus Effect', xnames[-1]))
 
     # Overwrite nperm to show no permutations were done
     nperm <- NA
@@ -495,7 +515,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
     pv.omni <- perm.geq.obs[1] / nperm
     pv.x <- perm.geq.obs[-1] / nperm
     pv <- data.frame('perm.pvals' = c(pv.omni, pv.x),
-                     row.names = c('Omnibus', xnames[-1]))
+                     row.names = c('Omnibus Effect', xnames[-1]))
 
 
     # --- Standard Error --- #
@@ -506,7 +526,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
     acc.omni <- sqrt((pv.omni.hold * (1-pv.omni.hold)) / nperm)
     acc.x <- sqrt((pv.x.hold * (1-pv.x.hold)) / nperm)
     pv.acc <- data.frame('perm.p.SE' = c(acc.omni, acc.x),
-                         row.names = c('Omnibus', xnames[-1]))
+                         row.names = c('Omnibus Effect', xnames[-1]))
     rm(pv.omni.hold, pv.x.hold)
 
     # --- Fill in LAMBDA with a note if it was requested --- #
@@ -578,7 +598,7 @@ print.mdmr <- function(x, ...){
 #' @param object Output from \code{mdmr}
 #' @param ... Further arguments passed to or from other methods.
 #'
-#' @return An object with six elements and a summary function. Calling
+#' @return Calling
 #' \code{summary(mdmr.res)} produces a data frame comprised of:
 #' \item{Statistic}{Value of the corresponding MDMR test statistic}
 #' \item{Pseudo R2}{Size of the corresponding effect on the
@@ -664,7 +684,38 @@ summary.mdmr <- function(object, ...){
                           'p-value' = object$pv)
     names(print.res) <- names(out.res) <- c('Statistic', 'Pseudo R2', pv.name)
   }
+
+
+
+  # Add significance codes to p-values
+  print.res <- data.frame(print.res, NA)
+  for(k in 1:4){
+    print.res[,k] <- paste(print.res[,k])
+  }
+  names(print.res)[4] <- ''
+  for(l in 1:nrow(print.res)){
+    if(object$pv[l,1] > 0.1){
+      print.res[l,4] <- '   '
+    }
+    if((object$pv[l,1] <= 0.1) & (object$pv[l,1] > 0.05)){
+      print.res[l,4] <- '.  '
+    }
+    if((object$pv[l,1] <= 0.05) & (object$pv[l,1] > 0.01)){
+      print.res[l,4] <- '*  '
+    }
+    if((object$pv[l,1] <= 0.01) & (object$pv[l,1] > 0.001)){
+      print.res[l,4] <- '** '
+    }
+    if(object$pv[l,1] <= 0.001){
+      print.res[l,4] <- '***'
+    }
+  }
+
+
   print(print.res)
+  cat('---', fill = T)
+  cat("Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1")
+
   invisible(out.res)
 }
 
@@ -883,7 +934,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
 
     # ====================== Return Results =========================== #
     res <- c(res, r2.x)
-    names(res) <- c('Omnibus', xnames)
+    names(res) <- c('Omnibus Effect', xnames)
     return(res)
   }
 
@@ -931,7 +982,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
                    pr2.jack
                  })
                  res <- matrix(unlist(res), nrow = p+1, ncol = q)
-                 dimnames(res) <- list(c('Omnibus', xnames),
+                 dimnames(res) <- list(c('Omnibus Effect', xnames),
                                        paste0(ynames, '.jack'))
                  res
                })
@@ -974,7 +1025,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
             pr2.jack
           })
           res <- matrix(unlist(res), nrow = p+1, ncol = q)
-          dimnames(res) <- list(c('Omnibus', xnames),
+          dimnames(res) <- list(c('Omnibus Effect', xnames),
                                 paste0(ynames, '.jack'))
           res
         },
@@ -994,7 +1045,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
 
     # --- Compute Median of Delta --- #
     delta.med <- matrix(0, nrow = p + 1, ncol = q)
-    dimnames(delta.med) <-  list(c('Omnibus', xnames),
+    dimnames(delta.med) <-  list(c('Omnibus Effect', xnames),
                                  paste0(ynames, '.jack'))
     for(i in 1:nrow(delta.med)){
       for(j in 1:ncol(delta.med)){
@@ -1038,7 +1089,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
       # Subtract the jackknifed pseudo R-squares from the real pseudo R-squares
       # to get the delta statistics for each rep
       jack.pr2 <- apply(jack.pr2, 2, function(x){pr2 - x})
-      dimnames(jack.pr2) <- list(c('Omnibus', xnames),
+      dimnames(jack.pr2) <- list(c('Omnibus Effect', xnames),
                                  paste0(ynames, '.jack'))
     }
 
@@ -1064,7 +1115,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
       # Subtract the jackknifed pseudo R-squares from the real pseudo R-squares
       # to get the delta statistics for each rep
       jack.pr2 <- apply(jack.pr2, 2, function(x){pr2 - x})
-      dimnames(jack.pr2) <- list(c('Omnibus', xnames),
+      dimnames(jack.pr2) <- list(c('Omnibus Effect', xnames),
                                  paste0(ynames, '.jack'))
     }
 
@@ -1107,7 +1158,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
                        cex.axis = cex, cex.lab = cex, cex = cex, cex.main = cex)
         graphics::axis(1, at = 1:q, labels = c(ynames[y.inds]), las = y.las,
                        cex.axis = cex, cex.lab = cex)
-        graphics::axis(2, at = (p):1, labels = c('Omnibus'), las = 1,
+        graphics::axis(2, at = (p):1, labels = c('Omnibus Effect'), las = 1,
                        cex.axis = cex, cex.lab = cex)
 
         # --- Convert to z scores for shading --- #
@@ -1151,7 +1202,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
                      cex.axis = cex, cex.lab = cex, cex = cex, cex.main = cex)
       graphics::axis(1, at = 1:q, labels = c(ynames[y.inds]), las = y.las,
                      cex.axis = cex, cex.lab = cex)
-      graphics::axis(2, at = (p+1):1, labels = c('Omnibus', xnames[x.inds-1]),
+      graphics::axis(2, at = (p+1):1, labels = c('Omnibus Effect', xnames[x.inds-1]),
                      las = 1,
                      cex.axis = cex, cex.lab = cex)
 
@@ -1211,4 +1262,3 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
 #'
 #' See package vignette by calling \code{vignette('mdmr-vignette')}.
 "Y.mdmr"
-

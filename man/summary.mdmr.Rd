@@ -12,7 +12,7 @@
 \item{...}{Further arguments passed to or from other methods.}
 }
 \value{
-An object with six elements and a summary function. Calling
+Calling
 \code{summary(mdmr.res)} produces a data frame comprised of:
 \item{Statistic}{Value of the corresponding MDMR test statistic}
 \item{Pseudo R2}{Size of the corresponding effect on the
