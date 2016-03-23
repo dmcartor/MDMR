@@ -184,7 +184,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
   }
 
   # Remove observations that are misxing on X
-  X.na <- which(rowSums(is.na(X)) > 0)
+  X.na <- which(rowSums(is.na(as.matrix(X))) > 0)
   if(length(X.na) > 0){
     X <- X[-X.na,]
     G <- G[-X.na, -X.na]
@@ -714,7 +714,7 @@ summary.mdmr <- function(object, ...){
 
   print(print.res)
   cat('---', fill = T)
-  cat("Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1")
+  cat("Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1")
 
   invisible(out.res)
 }
@@ -793,7 +793,7 @@ summary.mdmr <- function(object, ...){
 #' plotted in grayscale.
 #' @param cex Multiplier for cex.axis, cex.lab, cex.main, and cex that are
 #' passed to the plotted result.
-#' @param out.las Orientation of labels for the outcome items. Defaults to
+#' @param y.las Orientation of labels for the outcome items. Defaults to
 #' vertical (2). Value of 1 prints horizontal labels, and is only recommended
 #' if the multivariate outcome is comprised of few variables.
 #'

@@ -62,7 +62,7 @@ plotted in grayscale.}
 \item{cex}{Multiplier for cex.axis, cex.lab, cex.main, and cex that are
 passed to the plotted result.}
 
-\item{out.las}{Orientation of labels for the outcome items. Defaults to
+\item{y.las}{Orientation of labels for the outcome items. Defaults to
 vertical (2). Value of 1 prints horizontal labels, and is only recommended
 if the multivariate outcome is comprised of few variables.}
 }

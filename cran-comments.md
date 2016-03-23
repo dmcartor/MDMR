@@ -1,8 +1,8 @@
 ## Resubmission
 Updating MDMR package. Changes:
 
-* Added an option to compute permutation-based p-values with mdmr()
-* Fixed an error resulting from passing a univariate predictor to delta()
+* Fixed a bug that occurred with missingness on X
+* Added significance indicators to summary.mdmr() that mirror those used by lm()
 
 ## Test environments
 * local OS X install, R 3.2.3
