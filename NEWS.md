@@ -1,3 +1,7 @@
+# MDMR 0.4.0
+
+* Substantially changed how categorical predictors are treated. In the new version, omnibus effects are tested rather than individually testing dummy/contrast codes.
+
 # MDMR 0.3.3
 
 * Fixed a bug that occurred with missingness on X

@@ -1,8 +1,7 @@
 ## Resubmission
 Updating MDMR package. Changes:
 
-* Fixed a bug that occurred with missingness on X
-* Added significance indicators to summary.mdmr() that mirror those used by lm()
+* Substantially changed how categorical predictors are treated
 
 ## Test environments
 * local OS X install, R 3.2.3
