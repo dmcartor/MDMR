@@ -9,8 +9,12 @@ mdmr(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
   nperm = 500, seed = NULL)
 }
 \arguments{
-\item{X}{A \eqn{n x p} matrix or data frame of predictors. Factors are
-allowed to be included, and will be dummy-coded prior to analysis.}
+\item{X}{A \eqn{n x p} matrix or data frame of predictors. Unordered factors
+will be tested with contrast-codes by default, and ordered factors will be
+tested with polynomial contrasts. For finer control of how categorical
+predictors are handled, or if higher-order effects are desired, the output
+from a call to \code{model.matrix()} can be supplied to this argument as
+well.}
 
 \item{D}{Distance matrix computed on the outcome data. Can be either a
 matrix or an R \code{\link{dist}} object. Either \code{D} or \code{G}
@@ -55,6 +59,7 @@ Defaults to a random seed.}
 An object with six elements and a summary function. Calling
 \code{summary(mdmr.res)} produces a data frame comprised of:
 \item{Statistic}{Value of the corresponding MDMR test statistic}
+\item{Numer DF}{Numerator degrees of freedom for the corresponding effect}
 \item{Pseudo R2}{Size of the corresponding effect on the
 distance matrix}
 \item{p-value}{The p-value for each effect.}

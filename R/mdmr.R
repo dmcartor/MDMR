@@ -59,8 +59,12 @@ gower <- function(d.mat){
 #' The distance matrix \code{D} can be passed to \code{mdmr} as either a
 #' distance object or a symmetric matrix.
 #'
-#' @param X A \eqn{n x p} matrix or data frame of predictors. Factors are
-#' allowed to be included, and will be dummy-coded prior to analysis.
+#' @param X A \eqn{n x p} matrix or data frame of predictors. Unordered factors
+#' will be tested with contrast-codes by default, and ordered factors will be
+#' tested with polynomial contrasts. For finer control of how categorical
+#' predictors are handled, or if higher-order effects are desired, the output
+#' from a call to \code{model.matrix()} can be supplied to this argument as
+#' well.
 #' @param D Distance matrix computed on the outcome data. Can be either a
 #' matrix or an R \code{\link{dist}} object. Either \code{D} or \code{G}
 #' must be passed to \code{mdmr()}.
@@ -95,6 +99,7 @@ gower <- function(d.mat){
 #' @return An object with six elements and a summary function. Calling
 #' \code{summary(mdmr.res)} produces a data frame comprised of:
 #' \item{Statistic}{Value of the corresponding MDMR test statistic}
+#' \item{Numer DF}{Numerator degrees of freedom for the corresponding effect}
 #' \item{Pseudo R2}{Size of the corresponding effect on the
 #' distance matrix}
 #' \item{p-value}{The p-value for each effect.}
@@ -183,6 +188,17 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
     G <- gower(D)
   }
 
+  # Get test indices of variables comprising a model matrix (e.g. which contrast
+  # codes need to be tested jointly to assess a factor if a model.matrix was
+  # passed as X). If X isn't a model matrix, do them all one-at-a-time.
+  test.inds <- attr(X, "assign")
+  if(!is.null(test.inds)){
+    is.model.mat <- T
+  }
+  if(is.null(test.inds)){
+    is.model.mat <- F
+  }
+
   # Remove observations that are misxing on X
   X.na <- which(rowSums(is.na(as.matrix(X))) > 0)
   if(length(X.na) > 0){
@@ -195,12 +211,56 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
 
   # ======================= Omnibus Test Statistic =========================== #
 
-  # Handle potential factors, no-named variables
-  X <- stats::model.matrix(~ . , data = as.data.frame(X))
+  # Handle potential factors if X is not a model.matrix
+  if(!is.model.mat){
+    contr.list <- lapply(1:ncol(X), FUN = function(k){
+      contr.type <- NULL
+      if(is.factor(X[,k])){
+        contr.type <- 'contr.sum'
+      }
+      if(is.ordered(X[,k])){
+        contr.type <- 'contr.poly'
+      }
+      return(contr.type)
+    })
+    names(contr.list) <- colnames(X)
+    contr.list <- contr.list[!unlist(lapply(contr.list, is.null))]
+    # Case 1: at least some categorical predictors
+    if(length(contr.list) > 0){
+      X <- stats::model.matrix(~ . , data = as.data.frame(X),
+                               contrasts.arg = contr.list)
+    }
+    # Case 2: all numeric predictors
+    if(length(contr.list) == 0){
+      X <- stats::model.matrix(~ . , data = as.data.frame(X))
+    }
+
+
+    test.inds <- attr(X, "assign")
+  }
   xnames <- colnames(X)
+  unique.xnames <- lapply(1:max(test.inds), FUN = function(kk){
+    hold.names <- varname <- xnames[test.inds == kk]
+    if(length(varname) > 1){
+      constant.char <-
+        which(unlist(lapply(1:nchar(hold.names[1]), FUN = function(ind){
+          chars <- unlist(lapply(hold.names, FUN = function(var.name){
+            substr(x = var.name, start = ind, stop = ind)
+          }))
+          var(as.numeric(as.factor(chars))) == 0
+        })))
+      varname <- paste(unlist(lapply(constant.char, FUN = function(cc){
+        substr(x = hold.names[1], start = cc, stop = cc)
+      })), collapse = '')
+    }
+    varname
+  })
+  unique.xnames <- unlist(unique.xnames)
+
 
   # Record the number of items and sample size
   p <- ncol(X)-1
+  px <- length(unique.xnames)
   n <- nrow(X)
 
 
@@ -229,11 +289,18 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
   if(ncores == 1){
 
     # Get vectorized hat matrices for each conditional effect
-    Hs <- lapply(2:(p+1), function(k){
-      Xs <- X[,-k]
+    Hs <- lapply(1:px, function(k){
+      x.rm <- which(test.inds == k)
+      Xs <- X[,-x.rm]
       Hs <- tcrossprod(tcrossprod(Xs, solve(crossprod(Xs))), Xs)
       c(H - Hs)
     })
+
+    # Get DF of each test
+    df <- unlist(lapply(1:px, function(k){
+      x.rm <- which(test.inds == k)
+      length(x.rm)
+    }))
 
     # Compute SSD due to conditional effect
     numer.x <- unlist(lapply(Hs, function(vhs){
@@ -249,14 +316,24 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
   if(ncores > 1){
 
     # Get vectorized hat matrices for each conditional effect
-    Hs <- parallel::mclapply(2:(p+1), function(k){
-      Xs <- X[,-k]
+    Hs <- parallel::mclapply(1:px, function(k){
+      x.rm <- which(test.inds == k)
+      Xs <- X[,-x.rm]
       Hs <- tcrossprod(tcrossprod(Xs, solve(crossprod(Xs))), Xs)
       c(H - Hs)
     },
     mc.preschedule = TRUE, mc.set.seed = TRUE,
     mc.silent = FALSE, mc.cores = ncores,
     mc.cleanup = TRUE, mc.allow.recursive = TRUE)
+
+    # Get DF of each test
+    df <- unlist(parallel::mclapply(1:px, function(k){
+      x.rm <- which(test.inds == k)
+      length(x.rm)
+    },
+    mc.preschedule = TRUE, mc.set.seed = TRUE,
+    mc.silent = FALSE, mc.cores = ncores,
+    mc.cleanup = TRUE, mc.allow.recursive = TRUE))
 
     # Compute SSD due to conditional effect
     numer.x <- unlist(parallel::mclapply(Hs, function(vhs){
@@ -274,9 +351,11 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
 
   # --- Combine test statistics and pseudo R-squares --- #
   stat <- data.frame('stat' = c(f.omni, f.x),
-                     row.names = c('Omnibus Effect', xnames[-1]))
+                     row.names = c('Omnibus Effect', unique.xnames))
+  df <- data.frame('df' = c(p, df),
+                   row.names = c('Omnibus Effect', unique.xnames))
   pr2 <- data.frame('pseudo.Rsq' = c(pr2.omni, pr2.x),
-                    row.names = c('Omnibus Effect', xnames[-1]))
+                    row.names = c('Omnibus Effect', unique.xnames))
 
 
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -339,7 +418,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
 
     # Initiailze accuracy of the Davies algorithm
     acc.omni <- start.acc
-    pv.omni <- pmdmr(f.omni, lambda, p, p, n, acc = acc.omni)
+    pv.omni <- pmdmr(f.omni, lambda, k = p, p = p, n = n, acc = acc.omni)
 
     # If the davies procedure threw an error, decrease the accuracy
     while(length(pv.omni) > 1){
@@ -354,15 +433,15 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
     if(ncores == 1){
 
       # Get p-values
-      p.res <- lapply(1:p, function(k){
+      p.res <- lapply(1:px, function(k){
         item.acc <- start.acc
-        pv <- pmdmr(q = f.x[k], lambda = lambda, k = 1,
+        pv <- pmdmr(q = f.x[k], lambda = lambda, k = df[k+1,1],
                     p = p, n = n, acc = item.acc)
 
         # If the davies procedure threw an error, decrease the accuracy
         while(length(pv) > 1){
           item.acc <- item.acc * 10
-          pv <- pmdmr(q = f.x[k], lambda = lambda, k = 1,
+          pv <- pmdmr(q = f.x[k], lambda = lambda, k = df[k+1,1],
                       p = p, n = n, acc = item.acc)
         }
         c(pv.x = pv, acc = item.acc)
@@ -376,15 +455,15 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
     if(ncores > 1){
 
       # Get p-values
-      p.res <- parallel::mclapply(1:p, function(k){
+      p.res <- parallel::mclapply(1:px, function(k){
         item.acc <- start.acc
-        pv <- pmdmr(q = f.x[k], lambda = lambda, k = 1,
+        pv <- pmdmr(q = f.x[k], lambda = lambda, k = df[k+1,1],
                     p = p, n = n, acc = item.acc)
 
         # If the davies procedure threw an error, decrease the accuracy
         while(length(pv) > 1){
           item.acc <- item.acc * 10
-          pv <- pmdmr(q = f.x[k], lambda = lambda, k = 1,
+          pv <- pmdmr(q = f.x[k], lambda = lambda, k = df[k+1,1],
                       p = p, n = n, acc = item.acc)
         }
         c(pv.x = pv, acc = item.acc)
@@ -399,9 +478,9 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
 
 
     pv <- data.frame('analytic.pvals' = c(pv.omni, pv.x),
-                     row.names = c('Omnibus Effect', xnames[-1]))
+                     row.names = c('Omnibus Effect', unique.xnames))
     pv.acc <- data.frame('p.max.error' = c(acc.omni, acc.x),
-                         row.names = c('Omnibus Effect', xnames[-1]))
+                         row.names = c('Omnibus Effect', unique.xnames))
 
     # Overwrite nperm to show no permutations were done
     nperm <- NA
@@ -428,8 +507,9 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
       f.omni.perm <- numer.perm / denom.perm
 
       # CONDITIONAL
-      Hs.perm <- lapply(2:(p+1), function(k){
-        Xs.perm <- X.perm[,-k]
+      Hs.perm <- lapply(1:px, function(k){
+        x.rm <- which(test.inds == k)
+        Xs.perm <- X.perm[,-x.rm]
         Hs.perm <- tcrossprod(
           tcrossprod(Xs.perm, solve(crossprod(Xs.perm))), Xs.perm)
         c(H.perm)
@@ -459,7 +539,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
 
       # Initialize counter for number of times each permuted test statistic is
       # larger than the observed test statistic
-      perm.geq.obs <- rep(0, p + 1)
+      perm.geq.obs <- rep(0, px + 1)
 
       for(i in 1:nperm){
         perm.geq.obs <- perm.geq.obs + (mdmr.permstats() >= stat)
@@ -491,7 +571,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
 
       # Initialize counter for number of times each permuted test statistic is
       # larger than the observed test statistic
-      perm.geq.obs <- rep(0, p + 1)
+      perm.geq.obs <- rep(0, px + 1)
 
       # Compute permutation p-values
       for(i in 1:perm.nchunk){
@@ -503,7 +583,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
           mc.cleanup = TRUE, mc.allow.recursive = TRUE)
         perm.geq.obs <- perm.geq.obs +
           colSums(
-            matrix(unlist(res), nrow = perm.chunkSize, ncol = p + 1, byrow = T))
+            matrix(unlist(res), nrow = perm.chunkSize, ncol = px +1, byrow = T))
 
         cat((perm.chunkEnd[i]/nperm)*100,
             '% of permutation test statistics computed.',
@@ -515,7 +595,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
     pv.omni <- perm.geq.obs[1] / nperm
     pv.x <- perm.geq.obs[-1] / nperm
     pv <- data.frame('perm.pvals' = c(pv.omni, pv.x),
-                     row.names = c('Omnibus Effect', xnames[-1]))
+                     row.names = c('Omnibus Effect', unique.xnames))
 
 
     # --- Standard Error --- #
@@ -526,7 +606,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
     acc.omni <- sqrt((pv.omni.hold * (1-pv.omni.hold)) / nperm)
     acc.x <- sqrt((pv.x.hold * (1-pv.x.hold)) / nperm)
     pv.acc <- data.frame('perm.p.SE' = c(acc.omni, acc.x),
-                         row.names = c('Omnibus Effect', xnames[-1]))
+                         row.names = c('Omnibus Effect', unique.xnames))
     rm(pv.omni.hold, pv.x.hold)
 
     # --- Fill in LAMBDA with a note if it was requested --- #
@@ -542,11 +622,11 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
 
   if(return.lambda){
     out <- list('stat' = stat, 'pr.sq' = pr2, 'pv' = pv, 'p.prec' = pv.acc,
-                lambda = lambda, nperm = nperm)
+                'df' = df, lambda = lambda, nperm = nperm)
   }
   if(!return.lambda){
     out <- list('stat' = stat, 'pr.sq' = pr2, 'pv' = pv, 'p.prec' = pv.acc,
-                lambda = NULL, nperm = nperm)
+                'df' = df, lambda = NULL, nperm = nperm)
   }
 
   class(out) <- c('mdmr', class(out))
@@ -663,12 +743,15 @@ summary.mdmr <- function(object, ...){
     }
     print.res <- data.frame('Statistic' =
                               format(object$stat, digits = 3),
+                            'Numer DF' = object$df,
                             'Pseudo R2' = format.pval(object$pr.sq, digits = 3),
                             'p-value' = pv.print)
     out.res <- data.frame('Statistic' = object$stat,
+                          'Numer DF' = object$df,
                           'Pseudo R2' = object$pr.sq,
                           'p-value' = object$pv)
-    names(print.res) <- names(out.res) <- c('Statistic', 'Pseudo R2', pv.name)
+    names(print.res) <- names(out.res) <- c('Statistic', 'Numer DF',
+                                            'Pseudo R2', pv.name)
   }
   if(!is.na(object$nperm)){
     pv.name <- 'Permutation p-value'
@@ -677,37 +760,40 @@ summary.mdmr <- function(object, ...){
 
     print.res <- data.frame('Statistic' =
                               format(object$stat, digits = 3),
+                            'Numer DF' = object$df,
                             'Pseudo R2' = format.pval(object$pr.sq, digits = 3),
                             'p-value' = pv.print)
     out.res <- data.frame('Statistic' = object$stat,
+                          'Numer DF' = object$df,
                           'Pseudo R2' = object$pr.sq,
                           'p-value' = object$pv)
-    names(print.res) <- names(out.res) <- c('Statistic', 'Pseudo R2', pv.name)
+    names(print.res) <- names(out.res) <- c('Statistic', 'Numer DF',
+                                            'Pseudo R2', pv.name)
   }
 
 
 
   # Add significance codes to p-values
   print.res <- data.frame(print.res, NA)
-  for(k in 1:4){
+  for(k in 1:5){
     print.res[,k] <- paste(print.res[,k])
   }
-  names(print.res)[4] <- ''
+  names(print.res)[5] <- ''
   for(l in 1:nrow(print.res)){
     if(object$pv[l,1] > 0.1){
-      print.res[l,4] <- '   '
+      print.res[l,5] <- '   '
     }
     if((object$pv[l,1] <= 0.1) & (object$pv[l,1] > 0.05)){
-      print.res[l,4] <- '.  '
+      print.res[l,5] <- '.  '
     }
     if((object$pv[l,1] <= 0.05) & (object$pv[l,1] > 0.01)){
-      print.res[l,4] <- '*  '
+      print.res[l,5] <- '*  '
     }
     if((object$pv[l,1] <= 0.01) & (object$pv[l,1] > 0.001)){
-      print.res[l,4] <- '** '
+      print.res[l,5] <- '** '
     }
     if(object$pv[l,1] <= 0.001){
-      print.res[l,4] <- '***'
+      print.res[l,5] <- '***'
     }
   }
 
