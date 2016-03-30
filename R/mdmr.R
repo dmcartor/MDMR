@@ -239,6 +239,34 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
     }
 
 
+<<<<<<< HEAD
+=======
+  # Handle potential factors if X is not a model.matrix
+  if(!is.model.mat){
+    contr.list <- lapply(1:ncol(X), FUN = function(k){
+      contr.type <- NULL
+      if(is.factor(X[,k])){
+        contr.type <- 'contr.sum'
+      }
+      if(is.ordered(X[,k])){
+        contr.type <- 'contr.poly'
+      }
+      return(contr.type)
+    })
+    names(contr.list) <- colnames(X)
+    contr.list <- contr.list[!unlist(lapply(contr.list, is.null))]
+    # Case 1: at least some categorical predictors
+    if(length(contr.list) > 0){
+      X <- stats::model.matrix(~ . , data = as.data.frame(X),
+                               contrasts.arg = contr.list)
+    }
+    # Case 2: all numeric predictors
+    if(length(contr.list) == 0){
+      X <- stats::model.matrix(~ . , data = as.data.frame(X))
+    }
+
+
+>>>>>>> 62595fbfdb60499a52f9db4d1e0b5bfe2f004df6
     test.inds <- attr(X, "assign")
   }
   xnames <- colnames(X)
