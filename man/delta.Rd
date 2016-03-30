@@ -9,8 +9,12 @@ delta(X, Y = NULL, dtype = NULL, niter = 10, x.inds = NULL,
   plot.res = F, grayscale = F, cex = 1, y.las = 2)
 }
 \arguments{
-\item{X}{A \eqn{n x p} matrix or data frame of predictors. Factors are
-allowed to be included, and will be dummy-coded prior to analysis.}
+\item{X}{A \eqn{n x p} matrix or data frame of predictors. Unordered factors
+will be tested with contrast-codes by default, and ordered factors will be
+tested with polynomial contrasts. For finer control of how categorical
+predictors are handled, or if higher-order effects are desired, the output
+from a call to \code{model.matrix()} can be supplied to this argument as
+well.}
 
 \item{Y}{Outcome data: \eqn{n x q} matrix of scores along the
 dependent variables.}
