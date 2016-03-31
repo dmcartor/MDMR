@@ -250,7 +250,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
           chars <- unlist(lapply(hold.names, FUN = function(var.name){
             substr(x = var.name, start = ind, stop = ind)
           }))
-          var(as.numeric(as.factor(chars))) == 0
+          stats::var(as.numeric(as.factor(chars))) == 0
         })))
       varname <- paste(unlist(lapply(constant.char, FUN = function(cc){
         substr(x = hold.names[1], start = cc, stop = cc)
@@ -1011,7 +1011,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
           chars <- unlist(lapply(hold.names, FUN = function(var.name){
             substr(x = var.name, start = ind, stop = ind)
           }))
-          var(as.numeric(as.factor(chars))) == 0
+          stats::var(as.numeric(as.factor(chars))) == 0
         })))
       varname <- paste(unlist(lapply(constant.char, FUN = function(cc){
         substr(x = hold.names[1], start = cc, stop = cc)
@@ -1023,7 +1023,7 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
 
 
   # Record the number of items and sample size
-  p <- ncol(X)-1
+  p <- ncol(X) - 1
   px <- length(unique.xnames)
   n <- nrow(X)
 
