@@ -63,13 +63,13 @@ Davies, R. B. (1980). The Distribution of a Linear Combination of
  chi-square Random Variables. Journal of the Royal Statistical Society.
  Series C (Applied Statistics), 29(3), 323-333.
 
- Duchesne, P., & De Micheaux, P.L. (2010). Computing the distribution of
+ Duchesne, P., & De Micheaux, P. L. (2010). Computing the distribution of
  quadratic forms: Further comparisons between the Liu-Tang-Zhang
  approximation and exact methods. Computational Statistics and Data
  Analysis, 54(4), 858-862.
 
- McArtor, D.B. & Lubke, G.H. (submitted). Extending multivariate distance
- matrix regression with an effect size measure and the distribution of the
- test statistic.
+ McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (second revision under
+ review). Extending multivariate distance matrix regression with an effect
+ size measure and the distribution of the test statistic.
 }
 

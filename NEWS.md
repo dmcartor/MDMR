@@ -1,3 +1,9 @@
+# MDMR 0.4.1
+
+* Updated documentation of the package to reflect the updated status of the manuscript upon which this package is based, as well as the addition of a new coauthor to the paper. At the request of the editor, we have conducted a second round of minor revisions, and the mew version is currently under review. 
+
+* Due to the fact that many of the mathematical details of this package rely on access to the not-yet-published paper, we encourage interested users to email us with questions regarding the methodology underlying this package.
+
 # MDMR 0.4.0
 
 * Substantially changed how categorical predictors are treated. In the new version, omnibus effects are tested rather than individually testing dummy/contrast codes.

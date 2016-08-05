@@ -1,10 +1,16 @@
 # MDMR
-Conduct multivariate distance matrix regression (Anderson, 2001; McArdle & Anderson, 2001) using the analytical p-values described by McArtor & Lubke (submitted) and compute permutation-based measures of effect size proposed by McArtor & Lubke.
+Conduct multivariate distance matrix regression (Anderson, 2001; McArdle & Anderson, 2001) using the analytical p-values described by McArtor, Lubke, \& Bergeman (second revision under review) and compute permutation-based measures of effect size proposed by McArtor et al.
 
 The most recent version can be installed from github using the devtools package:
 
     devtools::install_github("dmcartor/mdmr", build_vignettes = TRUE)
     library(MDMR)
+
+or directly from CRAN:
+
+    install.packages(MDMR)
+    library(MDMR)
+
 
 ## Usage
 

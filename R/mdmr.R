@@ -37,16 +37,17 @@ gower <- function(d.mat){
 
 
 
-#' Conduct MDMR with analytical p-values
+#' Conduct MDMR with analytic p-values
 #'
 #' \code{mdmr} (multivariate distance matrix regression) is used to regress a
 #' distance matrix onto a set of predictors. It returns the test statistic,
-#' pseudo R-square statistic, and analytical p-values for all predictors
+#' pseudo R-square statistic, and analytic p-values for all predictors
 #' jointly and for each predictor individually, conditioned on the rest.
 #'
 #' This function is the fastest approach to conducting MDMR. It uses the
 #' fastest known computational strategy to compute the MDMR test statistic (see
-#' Appendix A of McArtor & Lubke, 2015), and it uses fast, analytical p-values.
+#' Appendix A of McArtor et al., second revision under review), and it uses
+#' fast, analytic p-values.
 #'
 #' The slowest part of conducting MDMR is now the necessary eigendecomposition
 #' of the \code{G} matrix, whose computation time is a function of
@@ -134,14 +135,14 @@ gower <- function(d.mat){
 #'  chi-square Random Variables. Journal of the Royal Statistical Society.
 #'  Series C (Applied Statistics), 29(3), 323-333.
 #'
-#'  Duchesne, P., & De Micheaux, P.L. (2010). Computing the distribution of
+#'  Duchesne, P., & De Micheaux, P. L. (2010). Computing the distribution of
 #'  quadratic forms: Further comparisons between the Liu-Tang-Zhang
 #'  approximation and exact methods. Computational Statistics and Data
 #'  Analysis, 54(4), 858-862.
 #'
-#'  McArtor, D.B. & Lubke, G.H. (submitted). Extending multivariate distance
-#'  matrix regression with an effect size measure and the distribution of the
-#'  test statistic.
+#'  McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (second revision under
+#'  review). Extending multivariate distance matrix regression with an effect
+#'  size measure and the distribution of the test statistic.
 #'
 #' @examples
 #'# --- The following two approaches yield equivalent results --- #
@@ -373,11 +374,11 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
                       lim = 50000, acc = start.acc){
       # Use the eigenvalues of G and the test statistic q to make a vector
       # corresponding to all of the weights for the composite chi-square variables
-      # See Equation 12 in McArtor & Lubke (2015)
+      # See Equation 12 in McArtor et al.
       gamma <- c(lambda,  -q * lambda)
 
       # Aggregate the degrees of freedom for each composite chi-square variable
-      # See Equation 12 in McArtor & Lubke (2015)
+      # See Equation 12 in McArtor et al.
       nu <- c(rep(k, length(lambda)), rep(n-p-1, length(lambda)))
 
       # Call the Davies function at zero using the given weights and df, along
@@ -648,7 +649,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
 #' @param ... Further arguments passed to or from other methods.
 #'
 #' @return
-#' \item{p-value}{Analytical p-values for the omnibus test and each predictor}
+#' \item{p-value}{Analytic p-values for the omnibus test and each predictor}
 #'
 #' @author Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
 #'
@@ -720,14 +721,14 @@ print.mdmr <- function(x, ...){
 #'  chi-square Random Variables. Journal of the Royal Statistical Society.
 #'  Series C (Applied Statistics), 29(3), 323-333.
 #'
-#'  Duchesne, P., & De Micheaux, P.L. (2010). Computing the distribution of
+#'  Duchesne, P., & De Micheaux, P. L. (2010). Computing the distribution of
 #'  quadratic forms: Further comparisons between the Liu-Tang-Zhang
 #'  approximation and exact methods. Computational Statistics and Data
 #'  Analysis, 54(4), 858-862.
 #'
-#'  McArtor, D.B. & Lubke, G.H. (submitted). Extending multivariate distance
-#'  matrix regression with an effect size measure and the distribution of the
-#'  test statistic.
+#'  McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (second revision under
+#'  review). Extending multivariate distance matrix regression with an effect
+#'  size measure and the distribution of the test statistic.
 #'
 #' @examples
 #'# --- The following two approaches yield equivalent results --- #
@@ -824,11 +825,11 @@ summary.mdmr <- function(object, ...){
 #' pair-wise effect size (i.e. the effect of each predictor on each outcome
 #' variable, conditional on the rest of the predictors).
 #'
-#' See McArtor & Lubke (submitted) for a detailed description of how delta is
-#' computed. Note that it is a relative measure of effect, quantifying which
-#' effects are strong (high values of delta) and weak (low values of delta)
-#' within a single analysis, but estimates of delta cannot be directly compared
-#' across different datasets.
+#' See McArtor et al. (second revision under review) for a detailed description
+#' of how delta is computed. Note that it is a relative measure of effect,
+#' quantifying which effects are strong (high values of delta) and weak (low
+#' values of delta) within a single analysis, but estimates of delta cannot be
+#' directly compared across different datasets.
 #'
 #' There are two options for using this function. The first option is to
 #' specify the predictor matrix \code{X}, the outcome matrix \code{Y}, the
@@ -903,9 +904,9 @@ summary.mdmr <- function(object, ...){
 #'
 #' @author Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
 #'
-#' @references  McArtor, D.B. & Lubke, G.H. (submitted). Extending
-#' multivariate distance matrix regression with an effect size measure and the
-#' distribution of the test statistic.
+#' @references  McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (second
+#' revision under review).  Extending multivariate distance matrix regression
+#' with an effect size measure and the distribution of the test statistic.
 #'
 #' @examples
 #' data(mdmrdata)

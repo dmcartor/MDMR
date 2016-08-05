@@ -12,7 +12,7 @@
 \item{...}{Further arguments passed to or from other methods.}
 }
 \value{
-\item{p-value}{Analytical p-values for the omnibus test and each predictor}
+\item{p-value}{Analytic p-values for the omnibus test and each predictor}
 }
 \description{
 \code{print} method for class \code{mdmr}

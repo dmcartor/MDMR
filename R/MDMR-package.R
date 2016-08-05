@@ -1,9 +1,9 @@
 #' Multivariate Distance Matrix Regression
 #'
 #' \code{MDMR} allows a user to conduct multivariate distance matrix regression
-#' using analytic p-values and measures of effect size described by McArtor &
-#' Lubke (submitted). Analytic p-values are computed using the R package
-#' CompQuadForm (Duchesne & De Micheaux, 2010).
+#' using analytic p-values and measures of effect size described by McArtor et
+#' al. (second revision under review). Analytic p-values are computed using the
+#' R package CompQuadForm (Duchesne & De Micheaux, 2010).
 #'
 #' @section Usage:
 #'  To access this package's tutorial, type the following line into the console:
@@ -26,9 +26,9 @@
 #'  approximation and exact methods. Computational Statistics and Data
 #'  Analysis, 54(4), 858-862.
 #'
-#'  McArtor, D.B. & Lubke, G.H. (submitted). Extending multivariate distance
-#'  matrix regression with an effect size measure and the distribution of the
-#'  test statistic.
+#'  McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (second revision under
+#'  review). Extending multivariate distance matrix regression with an effect
+#'  size measure and the distribution of the test statistic.
 #'
 #' @examples
 #'data(mdmrdata)

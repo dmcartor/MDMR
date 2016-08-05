@@ -1,11 +1,11 @@
 ## Resubmission
 Updating MDMR package. Changes:
 
-* Substantially changed how categorical predictors are treated
+* Updated documentation to reflect change in status of manuscript
 
 ## Test environments
-* local OS X install, R 3.2.3
-* local Windows 7 install, R 3.0.0
+* local OS X install, R 3.3.0
+* local Windows 7 install, R 3.3.0
 * win-builder (devel and release)
 
 ## R CMD check results

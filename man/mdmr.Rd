@@ -2,7 +2,7 @@
 % Please edit documentation in R/mdmr.R
 \name{mdmr}
 \alias{mdmr}
-\title{Conduct MDMR with analytical p-values}
+\title{Conduct MDMR with analytic p-values}
 \usage{
 mdmr(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
   start.acc = 1e-20, ncores = 1, perm.p = (nrow(as.matrix(X)) < 200),
@@ -91,13 +91,14 @@ be drawn is that the p-value is smaller than \code{1/nperm}.
 \description{
 \code{mdmr} (multivariate distance matrix regression) is used to regress a
 distance matrix onto a set of predictors. It returns the test statistic,
-pseudo R-square statistic, and analytical p-values for all predictors
+pseudo R-square statistic, and analytic p-values for all predictors
 jointly and for each predictor individually, conditioned on the rest.
 }
 \details{
 This function is the fastest approach to conducting MDMR. It uses the
 fastest known computational strategy to compute the MDMR test statistic (see
-Appendix A of McArtor & Lubke, 2015), and it uses fast, analytical p-values.
+Appendix A of McArtor et al., second revision under review), and it uses
+fast, analytic p-values.
 
 The slowest part of conducting MDMR is now the necessary eigendecomposition
 of the \code{G} matrix, whose computation time is a function of
@@ -132,13 +133,13 @@ Davies, R. B. (1980). The Distribution of a Linear Combination of
  chi-square Random Variables. Journal of the Royal Statistical Society.
  Series C (Applied Statistics), 29(3), 323-333.
 
- Duchesne, P., & De Micheaux, P.L. (2010). Computing the distribution of
+ Duchesne, P., & De Micheaux, P. L. (2010). Computing the distribution of
  quadratic forms: Further comparisons between the Liu-Tang-Zhang
  approximation and exact methods. Computational Statistics and Data
  Analysis, 54(4), 858-862.
 
- McArtor, D.B. & Lubke, G.H. (submitted). Extending multivariate distance
- matrix regression with an effect size measure and the distribution of the
- test statistic.
+ McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (second revision under
+ review). Extending multivariate distance matrix regression with an effect
+ size measure and the distribution of the test statistic.
 }
 
