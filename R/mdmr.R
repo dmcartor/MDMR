@@ -518,7 +518,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
         Xs.perm <- X.perm[,-x.rm]
         Hs.perm <- tcrossprod(
           tcrossprod(Xs.perm, solve(crossprod(Xs.perm))), Xs.perm)
-        c(H.perm)
+        c(Hs.perm)
       })
 
       numer.x.perm <- unlist(lapply(Hs.perm, function(vhs.perm){
@@ -546,9 +546,16 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
       # Initialize counter for number of times each permuted test statistic is
       # larger than the observed test statistic
       perm.geq.obs <- rep(0, px + 1)
-
+      
+      # When p = 1 and everything is categorical, there can be some rounding
+      # issues that will make the omnibus and x test have different permutation
+      # p-values due to differences on the scale of 1e-16. Using rounded test
+      # statistics is just a trick to avoid that.
+      round.stat <- round(stat, 12)
+      
+      # Compute permutation p-values
       for(i in 1:nperm){
-        perm.geq.obs <- perm.geq.obs + (mdmr.permstats() >= stat)
+        perm.geq.obs <- perm.geq.obs + (mdmr.permstats() >= round.stat)
         if(i %% 1000 == 0){
           cat(round(i/nperm*100), '% of permutation test statistics computed.',
               fill = T)

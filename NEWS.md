@@ -1,3 +1,7 @@
+# MDMR 0.4.2
+
+* Bug fix: permutation tests of individual X effects were previously computed incorrectly
+
 # MDMR 0.4.1
 
 * Updated documentation of the package to reflect the updated status of the manuscript upon which this package is based, as well as the addition of a new coauthor to the paper. At the request of the editor, we have conducted a second round of minor revisions, and the mew version is currently under review. 

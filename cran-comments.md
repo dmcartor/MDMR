@@ -1,7 +1,7 @@
 ## Resubmission
 Updating MDMR package. Changes:
 
-* Updated documentation to reflect change in status of manuscript
+* Important bug fix w.r.t.permutation-based testss of conditional effects
 
 ## Test environments
 * local OS X install, R 3.3.0
