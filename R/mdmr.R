@@ -518,7 +518,7 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
         Xs.perm <- X.perm[,-x.rm]
         Hs.perm <- tcrossprod(
           tcrossprod(Xs.perm, solve(crossprod(Xs.perm))), Xs.perm)
-        c(Hs.perm)
+        vh.perm - c(Hs.perm)
       })
 
       numer.x.perm <- unlist(lapply(Hs.perm, function(vhs.perm){

@@ -1,7 +1,7 @@
 ## Resubmission
 Updating MDMR package. Changes:
 
-* Important bug fix w.r.t.permutation-based testss of conditional effects
+* Important bug fix w.r.t.permutation-based tests of conditional effects
 
 ## Test environments
 * local OS X install, R 3.3.0
