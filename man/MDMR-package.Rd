@@ -8,8 +8,9 @@
 \description{
 \code{MDMR} allows a user to conduct multivariate distance matrix regression
 using analytic p-values and measures of effect size described by McArtor et
-al. (second revision under review). Analytic p-values are computed using the
-R package CompQuadForm (Duchesne & De Micheaux, 2010).
+al. (2017). Analytic p-values are computed using the R package CompQuadForm
+(Duchesne & De Micheaux, 2010). It also facilitates the use of MDMR on
+samples consisting of (hierarchically) clustered observations.
 }
 \section{Usage}{
 
@@ -17,22 +18,48 @@ R package CompQuadForm (Duchesne & De Micheaux, 2010).
 
  \code{vignette('mdmr-vignette')}
 
- There are two primary functions that comprise this package:
+ There are three primary functions that comprise this package:
  \code{\link{mdmr}}, which regresses a distance matrix onto a set of
  predictors, and \code{\link{delta}}, which computes measures of univariate
  effect size in the context of multivariate distance matrix regression. The
- help files of both functions provide more general information than the
- package vignette.
+ third function \code{\link{mixed.mdmr}} facilitates the use of MDMR on
+ (hierarchically) clustered samples using an approach analogous to the
+ linearar mixed-effects model for univariate outcomes. The help files of all
+ all three functions provide more general information than the package
+ vignette.
 }
 \examples{
+################################################################
+## Conducting MDMR on data comprised of independent observations
+################################################################
+# Source data
 data(mdmrdata)
+
+# Get distance matrix
 D <- dist(Y.mdmr, method = 'euclidean')
 
+# Conduct MDMR
 mdmr.res <- mdmr(X = X.mdmr, D = D)
 summary(mdmr.res)
 
+# Compute delta statistics
 mdmr.delta <- delta(X = X.mdmr, Y = Y.mdmr, dtype = 'euclidean',
                    niter = 1, seed = 12345)
+mdmr.delta
+
+################################################################
+## Conducting MDMR on data comprised of dependent observations
+################################################################
+# Source data
+data("clustmdmrdata")
+
+# Get distance matrix
+D <- dist(Y.clust)
+
+# Conduct mixed-MDMR
+mixed.res <- mixed.mdmr(~ x1 + x2 + (x1 + x2 | grp),
+                        data = X.clust, D = D)
+summary(mixed.res)
 
 }
 \references{
@@ -45,8 +72,15 @@ Davies, R. B. (1980). The Distribution of a Linear Combination of
  approximation and exact methods. Computational Statistics and Data
  Analysis, 54(4), 858-862.
 
- McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (second revision under
- review). Extending multivariate distance matrix regression with an effect
- size measure and the distribution of the test statistic.
+ McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (2017). Extending
+ multivariate distance matrix regression with an effect size measure and the
+ distribution of the test statistic. Psychometrika. Advance online
+ publication.
+
+ McArtor, D. B. (2017). Extending a distance-based approach to multivariate
+ multiple regression (Doctoral Dissertation).
+
+ McArtor, D. B. & Lubke, G. H. (in preparation). Multivariate distance matrix
+ regression with hierarchically clustered samples.
 }
 

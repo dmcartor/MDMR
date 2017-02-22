@@ -1,3 +1,8 @@
+# MDMR 0.5.0
+
+* Included a new function mixed.mdmr() that facilitates the use of MDMR with hierarchically clustered samples
+* Various minor bug fixes
+
 # MDMR 0.4.2
 
 * Bug fix: permutation tests of individual X effects were previously computed incorrectly

@@ -97,8 +97,7 @@ jointly and for each predictor individually, conditioned on the rest.
 \details{
 This function is the fastest approach to conducting MDMR. It uses the
 fastest known computational strategy to compute the MDMR test statistic (see
-Appendix A of McArtor et al., second revision under review), and it uses
-fast, analytic p-values.
+Appendix A of McArtor et al., 2017), and it uses fast, analytic p-values.
 
 The slowest part of conducting MDMR is now the necessary eigendecomposition
 of the \code{G} matrix, whose computation time is a function of
@@ -116,13 +115,15 @@ distance object or a symmetric matrix.
 # Approach 1
 data(mdmrdata)
 D <- dist(Y.mdmr, method = 'euclidean')
-mdmr(X = X.mdmr, D = D)
+res1 <- mdmr(X = X.mdmr, D = D)
+summary(res1)
 
 # Approach 2
 data(mdmrdata)
 D <- dist(Y.mdmr, method = 'euclidean')
 G <- gower(D)
-mdmr(X = X.mdmr, G = G)
+res2 <- mdmr(X = X.mdmr, G = G)
+summary(res2)
 
 }
 \author{
@@ -138,8 +139,9 @@ Davies, R. B. (1980). The Distribution of a Linear Combination of
  approximation and exact methods. Computational Statistics and Data
  Analysis, 54(4), 858-862.
 
- McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (second revision under
- review). Extending multivariate distance matrix regression with an effect
- size measure and the distribution of the test statistic.
+ McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (2017). Extending
+ multivariate distance matrix regression with an effect size measure and the
+ distribution of the test statistic. Psychometrika. Advance online
+ publication.
 }
 
