@@ -46,8 +46,7 @@ gower <- function(d.mat){
 #'
 #' This function is the fastest approach to conducting MDMR. It uses the
 #' fastest known computational strategy to compute the MDMR test statistic (see
-#' Appendix A of McArtor et al., second revision under review), and it uses
-#' fast, analytic p-values.
+#' Appendix A of McArtor et al., 2017), and it uses fast, analytic p-values.
 #'
 #' The slowest part of conducting MDMR is now the necessary eigendecomposition
 #' of the \code{G} matrix, whose computation time is a function of
@@ -140,22 +139,25 @@ gower <- function(d.mat){
 #'  approximation and exact methods. Computational Statistics and Data
 #'  Analysis, 54(4), 858-862.
 #'
-#'  McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (second revision under
-#'  review). Extending multivariate distance matrix regression with an effect
-#'  size measure and the distribution of the test statistic.
+#'  McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (2017). Extending
+#'  multivariate distance matrix regression with an effect size measure and the
+#'  distribution of the test statistic. Psychometrika. Advance online
+#'  publication.
 #'
 #' @examples
 #'# --- The following two approaches yield equivalent results --- #
 #'# Approach 1
 #'data(mdmrdata)
 #'D <- dist(Y.mdmr, method = 'euclidean')
-#'mdmr(X = X.mdmr, D = D)
+#'res1 <- mdmr(X = X.mdmr, D = D)
+#'summary(res1)
 #'
 #'# Approach 2
 #'data(mdmrdata)
 #'D <- dist(Y.mdmr, method = 'euclidean')
 #'G <- gower(D)
-#'mdmr(X = X.mdmr, G = G)
+#'res2 <- mdmr(X = X.mdmr, G = G)
+#'summary(res2)
 #'
 #' @importFrom CompQuadForm davies
 #' @importFrom parallel mclapply
@@ -164,9 +166,16 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
                  start.acc = 1e-20, ncores = 1,
                  perm.p = (nrow(as.matrix(X)) < 200),
                  nperm = 500, seed = NULL){
+
   # If X is a vector, convert it to a matrix
   if(is.vector(X)){
     X <- as.matrix(X)
+  }
+
+  # Get names of the columns in X
+  unique.xnames <- colnames(X)
+  if(is.null(unique.xnames)){
+    colnames(X) <- unique.xnames <- paste0('X', 1:ncol(X))
   }
 
   # Make sure "D" is not interpreted as the D function
@@ -546,13 +555,13 @@ mdmr <- function(X, D = NULL, G = NULL, lambda = NULL, return.lambda = F,
       # Initialize counter for number of times each permuted test statistic is
       # larger than the observed test statistic
       perm.geq.obs <- rep(0, px + 1)
-      
+
       # When p = 1 and everything is categorical, there can be some rounding
       # issues that will make the omnibus and x test have different permutation
       # p-values due to differences on the scale of 1e-16. Using rounded test
       # statistics is just a trick to avoid that.
       round.stat <- round(stat, 12)
-      
+
       # Compute permutation p-values
       for(i in 1:nperm){
         perm.geq.obs <- perm.geq.obs + (mdmr.permstats() >= round.stat)
@@ -733,9 +742,10 @@ print.mdmr <- function(x, ...){
 #'  approximation and exact methods. Computational Statistics and Data
 #'  Analysis, 54(4), 858-862.
 #'
-#'  McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (second revision under
-#'  review). Extending multivariate distance matrix regression with an effect
-#'  size measure and the distribution of the test statistic.
+#'  McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (2017). Extending
+#'  multivariate distance matrix regression with an effect size measure and the
+#'  distribution of the test statistic. Psychometrika. Advance online
+#'  publication.
 #'
 #' @examples
 #'# --- The following two approaches yield equivalent results --- #
@@ -832,11 +842,11 @@ summary.mdmr <- function(object, ...){
 #' pair-wise effect size (i.e. the effect of each predictor on each outcome
 #' variable, conditional on the rest of the predictors).
 #'
-#' See McArtor et al. (second revision under review) for a detailed description
-#' of how delta is computed. Note that it is a relative measure of effect,
-#' quantifying which effects are strong (high values of delta) and weak (low
-#' values of delta) within a single analysis, but estimates of delta cannot be
-#' directly compared across different datasets.
+#' See McArtor et al. (2017) for a detailed description of how delta is computed.
+#' Note that it is a relative measure of effect, quantifying which effects are
+#' strong (high values of delta) and weak (low values of delta) within a single
+#' analysis, but estimates of delta cannot be directly compared across different
+#' datasets.
 #'
 #' There are two options for using this function. The first option is to
 #' specify the predictor matrix \code{X}, the outcome matrix \code{Y}, the
@@ -911,9 +921,10 @@ summary.mdmr <- function(object, ...){
 #'
 #' @author Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
 #'
-#' @references  McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (second
-#' revision under review).  Extending multivariate distance matrix regression
-#' with an effect size measure and the distribution of the test statistic.
+#' @references  McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (2017).
+#' Extending multivariate distance matrix regression with an effect size measure
+#' and the distribution of the test statistic. Psychometrika. Advance online
+#' publication.
 #'
 #' @examples
 #' data(mdmrdata)
@@ -1438,3 +1449,536 @@ delta <- function(X, Y = NULL, dtype = NULL, niter = 10,
 #'
 #' See package vignette by calling \code{vignette('mdmr-vignette')}.
 "Y.mdmr"
+
+
+#' Simulated clustered predictor data to illustrate the Mixed-MDMR function
+#'
+#' See \code{\link{mixed.mdmr}}.
+"X.clust"
+
+
+#' Simulated clustered outcome data to illustrate the Mixed-MDMR function
+#'
+#' See \code{\link{mixed.mdmr}}.
+"Y.clust"
+
+
+
+
+
+
+
+
+
+#' Fit Mixed-MDMR models
+#'
+#' \code{mixed.mdmr} allows users to conduct multivariate distance matrix
+#' regression (MDMR) in the context of a (hierarchically) clustered sample
+#' without inflating Type-I error rates as a result of the violation of the
+#' independence assumption. This is done by invoking a mixed-effects modeling
+#' framework, in which clustering/grouping variables are specified as random
+#' effects and the covariate effects of interest are fixed effects. The input
+#' to \code{mixed.mdmr} largely reflects the input of the \code{\link{lmer}}
+#' function from the package \code{\link{lme4}} insofar as the specification of
+#' random and fixed effects are concerned (see Arguments for details). Note that
+#' this function simply controls for the random effects in order to test the
+#' fixed effects; it does not facilitate point estimation or inference on the
+#' random effects.
+#'
+#' @param fmla A one-sided linear formula object describing both the fixed-effects and random-effects part of the model, beginning with an ~ operator, which is followed by the terms to include in the model, separated by + operators. Random-effects terms are distinguished by vertical bars (|) separating expressions for design matrices from grouping factors. Two vertical bars (||) can be used to specify multiple uncorrelated random effects for the same grouping variable.
+#' @param data A mandatory data frame containing the variables named in formula.
+#' @param D Distance matrix computed on the outcome data. Can be either a
+#' matrix or an R \code{\link{dist}} object. Either \code{D} or \code{G}
+#' must be passed to \code{mdmr()}.
+#' @param G Gower's centered similarity matrix computed from \code{D}.
+#' Either \code{D} or \code{G} must be passed to \code{mdmr}.
+#' @param use.ssd The proportion of the total sum of squared distances (SSD)
+#' that will be targeted in the modeling process. In the case of non-Euclidean
+#' distances, specifying \code{use.ssd} to be slightly smaller than 1.00 (e.g.,
+#' 0.99) can substantially lower the computational burden of \code{mixed.mdmr}
+#' while maintaining well-controlled Type-I error rates and only sacrificing
+#' a trivial amount of power. In the case of Euclidean distances the
+#' computational burden of \code{mixed.mdmr} is small, so \code{use.ssd} should
+#' be set to 1.00.
+#' @param start.acc Starting accuracy of the Davies (1980) algorithm
+#' implemented in the \code{\link{davies}} function in the \code{CompQuadForm}
+#' package (Duchesne &  De Micheaux, 2010) that \code{mdmr()} uses to compute
+#' MDMR p-values.
+#' @param ncores Integer; if \code{ncores} > 1, the \code{\link{parallel}}
+#' package is used to speed computation. Note: Windows users must set
+#' \code{ncores = 1} because the \code{parallel} pacakge relies on forking. See
+#' \code{mc.cores} in the \code{\link{mclapply}} function in the
+#' \code{parallel} pacakge for more details.
+#'
+#' @return An object with six elements and a summary function. Calling
+#' \code{summary(mixed.mdmr.res)} produces a data frame comprised of:
+#' \item{Statistic}{Value of the corresponding MDMR test statistic}
+#' \item{Numer DF}{Numerator degrees of freedom for the corresponding effect}
+#' \item{p-value}{The p-value for each effect.}
+#' In addition to the information in the three columns comprising
+#' \code{summary(res)}, the \code{res} object also contains:
+#'
+#' \item{p.prec}{A data.frame reporting the precision of each p-value. If
+#' analytic p-values were computed, these are the maximum error bound of the
+#' p-values reported by the \code{davies} function in \code{CompQuadForm}. If
+#' permutation p-values were computed, it is the standard error of each
+#' permutation p-value.}
+#'
+#' Note that the printed output of \code{summary(res)} will truncate p-values
+#' to the smallest trustworthy values, but the object returned by
+#' \code{summary(res)} will contain the p-values as computed. The reason for
+#' this truncation differs for analytic and permutation p-values. For an
+#' analytic p-value, if the error bound of the Davies algorithm is larger than
+#' the p-value, the only conclusion that can be drawn with certainty is that
+#' the p-value is smaller than (or equal to) the error bound.
+#'
+#' @author Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
+#'
+#' @references Davies, R. B. (1980). The Distribution of a Linear Combination of
+#'  chi-square Random Variables. Journal of the Royal Statistical Society.
+#'  Series C (Applied Statistics), 29(3), 323-333.
+#'
+#'  Duchesne, P., & De Micheaux, P. L. (2010). Computing the distribution of
+#'  quadratic forms: Further comparisons between the Liu-Tang-Zhang
+#'  approximation and exact methods. Computational Statistics and Data
+#'  Analysis, 54(4), 858-862.
+#'
+#'  McArtor, D. B. (2017). Extending a distance-based approach to multivariate
+#'  multiple regression (Doctoral Dissertation).
+#'
+#'  McArtor, D. B. & Lubke, G. H. (in preparation). Multivariate distance matrix
+#'  regression with hierarchically clustered samples.
+#'
+#' @examples
+#  # Source data
+#' data("clustmdmrdata")
+#'
+#' # Get distance matrix
+#' D <- dist(Y.clust)
+#'
+#' # Regular MDMR without the grouping variable
+#' mdmr.res <- mdmr(X = X.clust[,1:2], D = D, perm.p = FALSE)
+#'
+#' # Results look significant
+#' summary(mdmr.res)
+#'
+#'
+#' # Account for grouping variable
+#' mixed.res <- mixed.mdmr(~ x1 + x2 + (x1 + x2 | grp),
+#'                         data = X.clust, D = D)
+#'
+#' # Signifance was due to the grouping variable
+#' summary(mixed.res)
+#'
+#'
+#' @importFrom CompQuadForm davies
+#' @importFrom parallel mclapply
+#' @importFrom lme4 lmer lmerControl
+#' @importFrom car Anova
+#' @importFrom utils tail
+#' @import stats
+#' @export
+mixed.mdmr <- function(fmla, data,
+                       D = NULL, G = NULL,
+                       use.ssd = 1,
+                       start.acc = 1e-20, ncores = 1){
+
+  ##############################################################################
+  ## Step 1:  Handle input
+  ##############################################################################
+
+  # ============================================================================
+  # Step 1a:  Manage the input formula
+  # ============================================================================
+
+  # Get RHS of formula
+  fmla <- paste(fmla)
+  if(length(fmla > 1)){
+    fmla <- tail(fmla, 1)
+  }
+
+  # Get omnibus reduced model formula (all fixed effects removed)
+  fmla.redux <- strsplit(fmla, split = '\\(')[[1]]
+  rand.terms <- grep(x = fmla.redux, pattern = '\\)')
+  fixed.terms <- (1:length(fmla.redux))[-rand.terms]
+  fmla.fixed <- paste(fmla.redux[fixed.terms])
+  fmla.fixed <- unlist(strsplit(fmla.fixed, split = '\\+'))
+  fmla.fixed <- paste0(fmla.fixed[fmla.fixed != ' '], collapse = '+')
+  fmla.redux <- fmla.redux[rand.terms]
+  for(k in 1:length(fmla.redux)){
+    fmla.redux[k] <- paste0('(', fmla.redux)
+  }
+  if(length(fmla.redux) > 0){
+    fmla.redux <- paste(fmla.redux, collapse = '+')
+  }
+  if(length(fmla.redux) == 0){
+    fmla.redux <- '1'
+  }
+
+
+  # Get the fixed portion of the formula for handling the input data in Step 1b
+  fmla.fixed <- as.formula(paste0('~ ', fmla.fixed))
+
+
+  # ============================================================================
+  # Step 1b:  Covariate management
+  # ============================================================================
+
+  # ----------------------------------------------------------------------------
+  # Get the data
+  # ----------------------------------------------------------------------------
+  # Model matrix formulation of the predictors in the model
+  X <- model.matrix(fmla.fixed, data = data)
+  # Number of predictors that will be tested
+  p <- length(unique(attr(X, 'assign')))
+  # Sample size
+  n <- nrow(X)
+  # Numerator DF for the omnibus test
+  df.omni <- ncol(X) - 1
+  # Numerator DF for each conditional test of a predictor
+  df.x <- unlist(lapply(unique(attr(X, 'assign')), FUN = function(k){
+    sum(attr(X, 'assign') == k)
+  }))
+  # Combine degrees of freedom
+  df.all <- c(df.omni, df.x)
+
+  # ============================================================================
+  # Step 1c:   Outcome management
+  # ============================================================================
+  if(class(D) != 'dist'){
+    if(class(D) != 'matrix'){
+      stop('Please pass a distance object or an n x n matrix to D')
+    }
+    if(class(D) == 'matrix'){
+      if(nrow(D) != ncol(D)){
+        stop('Please pass a distance object or an n x n matrix to D')
+      }
+    }
+  }
+
+  # Get eigenvalues and eigenvectors of G
+  D <- as.matrix(D)
+  if(nrow(D) != n){
+    stop('The dimensionality of D does not match nrow(data)')
+  }
+  G <- gower(D)
+  eig <- eigen(G)
+  U <- eig$vectors
+  lambda <- eig$values
+
+
+
+  ##############################################################################
+  ## Step 2:   Reduce number of dimensions of D to aid computation time
+  ##############################################################################
+
+  # ============================================================================
+  # Step 2a:  Record dimensionality; remove trivially small roots
+  # ============================================================================
+
+  # Original dimensionality of U
+  qq.srt <- length(lambda)
+
+  # Make lambda sum to 1 so that we can elimitate the relatively near-zero roots
+  lambda <- lambda / sum(lambda)
+  names(lambda) <- 1:qq.srt
+
+  # Get rid of dims that explain less than (1e-10 / 1) of the total SSD
+  keep.inds <- which(abs(lambda) > 1e-10)
+  U <- U[,keep.inds,drop=F]
+  lambda <- lambda[keep.inds]
+  qq <- length(lambda)
+  keep.lambda <- rep(T, qq)
+  keep.ssd <- sum(lambda * keep.lambda)
+
+  # ============================================================================
+  # Step 2b:  Optionally, keep only the dimension that explain "use.ssd" of the
+  #           total SSD
+  # ============================================================================
+
+  if(use.ssd < 1){
+
+    # Start out keeping just the largest eigenvalue
+    keep.lambda <- rep(F, qq)
+    keep.lambda[1] <- T
+
+    # Compute the total ssd based on only the retained dimensions
+    keep.ssd <- sum(lambda * keep.lambda)
+
+    # Until the retained SSD is within tol=0.001 of the target SSD %, keep more
+    # dimensions
+    while(abs(keep.ssd - use.ssd) > 0.001){
+
+      # If it's too small, add a real dimension
+      if(keep.ssd < use.ssd){
+        keep.lambda[which(!keep.lambda)[1]] <- T
+      }
+
+      # If it's too large, add an imaginary dimension
+      if(keep.ssd > use.ssd){
+        keep.lambda[tail(which(!keep.lambda), 1)] <- T
+      }
+
+      # Recompute the total ssd based on currently retained dimesions
+      keep.ssd <- sum(lambda * keep.lambda)
+
+      # Break if we've kept all dimensions, that is, if the dimensionality can't
+      # be reduced to satisfy the criteria keep.ssd and "tol"
+      if(all(keep.lambda)){break()}
+    }
+
+    # Trim the dimensions
+    U <- U[,keep.lambda,drop=F]
+    lambda <- lambda[keep.lambda]
+    qq <- length(lambda)
+  }
+
+
+
+  ##############################################################################
+  ## Step 3:  Get LRT statistics assessing all fixed effects
+  ##############################################################################
+
+  # Iterate over all retained MDS axes
+  chisqs <- mclapply(1:qq, mc.cores = ncores, FUN = function(k){
+
+    # Define the outcome variable for this axis
+    u.hold <- U[,k]
+
+    # --------------------------------------------------------------------------
+    # Tests of individual predictors
+    # --------------------------------------------------------------------------
+    # Formula for the full model for this outcome
+    fmla.full <- as.formula(paste0('u.hold ~ ', fmla))
+
+    # Fit full model
+    lmer.full <- lmer(fmla.full, data = data, REML = F,
+                      lmerControl(calc.derivs = F))
+
+    # Get test statistics for individual X using car::Anova()
+    chisq.x.res <- Anova(lmer.full, type = 'III', test.statistic = 'Chisq')
+    chisq.x <- chisq.x.res$Chisq
+    names(chisq.x) <- rownames(chisq.x.res)
+    rm(chisq.x.res)
+
+    # --------------------------------------------------------------------------
+    # Omnibus test
+    # --------------------------------------------------------------------------
+    # Fit model
+    fmla.redux <- as.formula(paste0('u.hold ~ ', fmla.redux))
+    lmer.redux <- lmer(fmla.redux, data = data, REML = F,
+                       lmerControl(calc.derivs = F))
+
+    # Get test statisitc via model comparison approach
+    chisq.omni <- anova(lmer.redux, lmer.full)$Chisq[2]
+    names(chisq.omni) <- 'Omnibus'
+
+    # --------------------------------------------------------------------------
+    # Return results
+    # --------------------------------------------------------------------------
+    return(c(chisq.omni, chisq.x))
+  })
+  # Get names of tests
+  nn <- names(chisqs[[1]])
+
+
+  ##############################################################################
+  ## Step 4:  Compute overall test statistics and p-values
+  ##############################################################################
+
+  # ============================================================================
+  # Step 4a:  Compute overall test statistics
+  # ============================================================================
+  tilde.l <- unlist(mclapply(1:length(nn), mc.cores = ncores, FUN = function(k){
+    sum(unlist(lapply(chisqs, '[[', k)) * lambda)}))
+  names(tilde.l) <- nn
+
+  # ============================================================================
+  # Step 4b:  p-values
+  # ============================================================================
+  pv <-
+    matrix(unlist(mclapply(1:length(nn), mc.cores = ncores, FUN = function(k){
+
+      df <- df.all[k]
+
+      # ------------------------------------------------------------------------
+      # Compute p-value
+      # ------------------------------------------------------------------------
+      acc <- 1e-20
+      pv <- davies(tilde.l[k], lambda = lambda,
+                   h = rep(df, qq), lim = 50000, acc = acc)$Qq
+      while(pv > 1){
+        acc <- acc * 10
+        if(acc > 0.01){
+          pv <- NA
+          break()
+        }
+        pv <- davies(tilde.l[k], lambda = lambda,
+                     h = rep(df, qq), lim = 50000, acc = acc)$Qq
+      }
+
+      return(c(pv, df, acc = acc))
+
+    })), ncol = 3, byrow = T)
+
+
+  ##############################################################################
+  ## Step 5: Output
+  ##############################################################################
+
+  df <- pv[,2]
+  acc <- pv[,3]
+  pv <- pv[,1]
+  names(tilde.l) <- names(pv) <- names(acc) <- names(df) <- nn
+
+  out <- list('stat' = tilde.l,'pv' = pv, 'p.prec' = acc,
+              'df' = df, ssd.used = keep.ssd)
+
+  class(out) <- c('mixed.mdmr', class(out))
+
+  return(out)
+}
+
+
+#' Print Mixed MDMR Object
+#'
+#' \code{print} method for class \code{mixed.mdmr}
+#'
+#' @param x Output from \code{\link{mixed.mdmr}}
+#' @param ... Further arguments passed to or from other methods.
+#'
+#' @return
+#' \item{p-value}{Analytic p-values for the omnibus test and each predictor}
+#'
+#' @author Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
+#'
+#'
+#' @export
+print.mixed.mdmr <- function(x, ...){
+  pv.name <- 'p-value'
+  # If it's analytic, we can only say it's below davies error
+  out <- rep(NA, length(x$pv))
+  for(i in 1:length(out)){
+    out[i] <- format.pval(x$pv[i], eps = x$p.prec[i])
+  }
+  out <- data.frame(out, row.names = names(x$pv))
+  names(out) <- pv.name
+  print(out)
+}
+
+#' Summarizing Mixed MDMR Results
+#'
+#' \code{summary} method for class \code{mixed.mdmr}
+#'
+#' @param object Output from \code{\link{mixed.mdmr}}
+#' @param ... Further arguments passed to or from other methods.
+#'
+#' @return Calling
+#' \code{summary(mdmr.res)} produces a data frame comprised of:
+#' \item{Statistic}{Value of the corresponding MDMR test statistic}
+#' \item{p-value}{The p-value for each effect.}
+#' In addition to the information in the three columns comprising
+#' \code{summary(res)}, the \code{res} object also contains:
+#'
+#' \item{p.prec}{A data.frame reporting the precision of each p-value. If
+#' analytic p-values were computed, these are the maximum error bound of the
+#' p-values reported by the \code{davies} function in \code{CompQuadForm}. If
+#' permutation p-values were computed, it is the standard error of each
+#' permutation p-value.}
+#'
+#' Note that the printed output of \code{summary(res)} will truncate p-values
+#' to the smallest trustworthy values, but the object returned by
+#' \code{summary(res)} will contain the p-values as computed. The reason for
+#' this truncation differs for analytic and permutation p-values. For an
+#' analytic p-value, if the error bound of the Davies algorithm is larger than
+#' the p-value, the only conclusion that can be drawn with certainty is that
+#' the p-value is smaller than (or equal to) the error bound.
+#'
+#' @author Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
+#'
+#' @references Davies, R. B. (1980). The Distribution of a Linear Combination of
+#'  chi-square Random Variables. Journal of the Royal Statistical Society.
+#'  Series C (Applied Statistics), 29(3), 323-333.
+#'
+#'  Duchesne, P., & De Micheaux, P. L. (2010). Computing the distribution of
+#'  quadratic forms: Further comparisons between the Liu-Tang-Zhang
+#'  approximation and exact methods. Computational Statistics and Data
+#'  Analysis, 54(4), 858-862.
+#'
+#'  McArtor, D. B. (2017). Extending a distance-based approach to multivariate
+#'  multiple regression (Doctoral Dissertation).
+#'
+#'  McArtor, D. B. & Lubke, G. H. (in preparation). Multivariate distance matrix
+#'  regression with hierarchically clustered samples.
+#'
+#' @examples
+#  # Source data
+#' data("clustmdmrdata")
+#'
+#' # Get distance matrix
+#' D <- dist(Y.clust)
+#'
+#' # Regular MDMR without the grouping variable
+#' mdmr.res <- mdmr(X = X.clust[,1:2], D = D, perm.p = FALSE)
+#'
+#' # Results look significant
+#' summary(mdmr.res)
+#'
+#'
+#' # Account for grouping variable
+#' mixed.res <- mixed.mdmr(~ x1 + x2 + (x1 + x2 | grp),
+#'                         data = X.clust, D = D)
+#'
+#' # Signifance was due to the grouping variable
+#' summary(mixed.res)
+#'
+#' @export
+summary.mixed.mdmr <- function(object, ...){
+  pv.name <- 'p-value'
+  pv.print <- rep(NA, length(object$pv))
+  for(i in 1:length(pv.print)){
+    pv.print[i] <- format.pval(object$pv[i], eps = object$p.prec[i])
+  }
+  print.res <- data.frame('Statistic' =
+                            format(object$stat, digits = 3),
+                          'Numer DF' = object$df,
+                          'p-value' = pv.print)
+  out.res <- data.frame('Statistic' = object$stat,
+                        'Numer DF' = object$df,
+                        'p-value' = object$pv)
+  names(print.res) <- names(out.res) <- c('Statistic', 'Numer DF', pv.name)
+
+
+
+
+  # Add significance codes to p-values
+  print.res <- data.frame(print.res, NA)
+  for(k in 1:3){
+    print.res[,k] <- paste(print.res[,k])
+  }
+  names(print.res)[4] <- ''
+  for(l in 1:nrow(print.res)){
+    if(object$pv[l] > 0.1){
+      print.res[l,4] <- '   '
+    }
+    if((object$pv[l] <= 0.1) & (object$pv[l] > 0.05)){
+      print.res[l,4] <- '.  '
+    }
+    if((object$pv[l] <= 0.05) & (object$pv[l] > 0.01)){
+      print.res[l,4] <- '*  '
+    }
+    if((object$pv[l] <= 0.01) & (object$pv[l] > 0.001)){
+      print.res[l,4] <- '** '
+    }
+    if(object$pv[l] <= 0.001){
+      print.res[l,4] <- '***'
+    }
+  }
+
+
+  print(print.res)
+  cat('---', fill = T)
+  cat("Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1")
+
+  invisible(out.res)
+}

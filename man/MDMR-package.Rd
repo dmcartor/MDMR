@@ -8,8 +8,9 @@
 \description{
 \code{MDMR} allows a user to conduct multivariate distance matrix regression
 using analytic p-values and measures of effect size described by McArtor et
-al. (second revision under review). Analytic p-values are computed using the
-R package CompQuadForm (Duchesne & De Micheaux, 2010).
+al. (2017). Analytic p-values are computed using the R package CompQuadForm
+(Duchesne & De Micheaux, 2010). It also facilitates the use of MDMR on
+samples consisting of (hierarchically) clustered observations.
 }
 \section{Usage}{
 
@@ -45,8 +46,15 @@ Davies, R. B. (1980). The Distribution of a Linear Combination of
  approximation and exact methods. Computational Statistics and Data
  Analysis, 54(4), 858-862.
 
- McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (second revision under
- review). Extending multivariate distance matrix regression with an effect
- size measure and the distribution of the test statistic.
+ McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (2017). Extending
+ multivariate distance matrix regression with an effect size measure and the
+ distribution of the test statistic. Psychometrika. Advance online
+ publication.
+
+ McArtor, D. B. (2017). Extending a distance-based approach to multivariate
+ multiple regression (Doctoral Dissertation).
+
+ McArtor, D. B. & Lubke, G. H. (in preparation). Multivariate distance matrix
+ regression with hierarchically clustered samples.
 }
 

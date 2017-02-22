@@ -89,11 +89,11 @@ pair-wise effect size (i.e. the effect of each predictor on each outcome
 variable, conditional on the rest of the predictors).
 }
 \details{
-See McArtor et al. (second revision under review) for a detailed description
-of how delta is computed. Note that it is a relative measure of effect,
-quantifying which effects are strong (high values of delta) and weak (low
-values of delta) within a single analysis, but estimates of delta cannot be
-directly compared across different datasets.
+See McArtor et al. (2017) for a detailed description of how delta is computed.
+Note that it is a relative measure of effect, quantifying which effects are
+strong (high values of delta) and weak (low values of delta) within a single
+analysis, but estimates of delta cannot be directly compared across different
+datasets.
 
 There are two options for using this function. The first option is to
 specify the predictor matrix \code{X}, the outcome matrix \code{Y}, the
@@ -132,8 +132,9 @@ delta(X.mdmr, G = G, G.list = G.list)
 Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
 }
 \references{
-McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (second
-revision under review).  Extending multivariate distance matrix regression
-with an effect size measure and the distribution of the test statistic.
+McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (2017).
+Extending multivariate distance matrix regression with an effect size measure
+and the distribution of the test statistic. Psychometrika. Advance online
+publication.
 }
 
