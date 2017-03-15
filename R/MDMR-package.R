@@ -55,11 +55,6 @@
 #' mdmr.res <- mdmr(X = X.mdmr, D = D)
 #' summary(mdmr.res)
 #'
-#' # Compute delta statistics
-#' mdmr.delta <- delta(X = X.mdmr, Y = Y.mdmr, dtype = 'euclidean',
-#'                    niter = 1, seed = 12345)
-#' mdmr.delta
-#'
 #' ################################################################
 #' ## Conducting MDMR on data comprised of dependent observations
 #' ################################################################
