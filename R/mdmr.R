@@ -1805,19 +1805,22 @@ mixed.mdmr <- function(fmla, data,
       # Compute p-value
       # ------------------------------------------------------------------------
       acc <- 1e-20
-      pv <- davies(tilde.l[k], lambda = lambda,
-                   h = rep(df, qq), lim = 50000, acc = acc)$Qq
-      while(pv > 1){
+      pp <- davies(tilde.l[k], lambda = lambda,
+                   h = rep(df, qq), lim = 50000, acc = acc)
+
+      # Error-check
+      err <- any(pp$ifault != 0, pp$Qq > 1, pp$Qq < 0)
+      while(err){
         acc <- acc * 10
         if(acc > 0.01){
-          pv <- NA
-          break()
+          warning(paste0('Unable to compute p-value for ', nn[k]))
+          return(c(NA, df, acc = acc))
         }
-        pv <- davies(tilde.l[k], lambda = lambda,
-                     h = rep(df, qq), lim = 50000, acc = acc)$Qq
+        pp <- davies(tilde.l[k], lambda = lambda,
+                     h = rep(df, qq), lim = 50000, acc = acc)
+        err <- any(pp$ifault != 0, pp$Qq > 1, pp$Qq < 0)
       }
-
-      return(c(pv, df, acc = acc))
+      return(c(pp$Qq, df, acc = acc))
 
     })), ncol = 3, byrow = T)
 
