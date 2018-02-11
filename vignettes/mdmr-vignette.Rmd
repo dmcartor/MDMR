@@ -51,6 +51,7 @@ summary(mdmr.res2)
 # --- Output the eigenvalues of G using the first call to mdmr() and pass them to
 # --- subsequent calls
 # Generate a hypothetical additional predictor we want to test first
+set.seed(102)
 x1 <- rnorm(500)
 mdmr.tmp <- mdmr(X = x1, D = D, return.lambda = T)
 # Pass the eigenvalues output by mdmr(return.lambda = t) to the next call of mdmr()
@@ -84,6 +85,7 @@ The first option to compute $\delta$ statistics it to pass the matrix of predict
 Calling *delta()* returns a data frame of the $\delta$ statistics whose rows correspond to omnibus and conditional effects on the columns, which each correspond to a variable comprising the multivariate outcome. If the argument *plot.it = T*, as is default, a heatmap will also be displayed to easily visualize the largest effects.
 
 ```{r, fig.width = 7, fig.height = 7/(16/9)}
+par(mar = c(5, 5, 4, 2) + 0.1)
 delta(X = X.mdmr, Y = Y.mdmr, dtype = 'manhattan', plot.res = T,
       niter = 1, seed = 12345)
 ```
@@ -101,14 +103,15 @@ The code below illustrates this procedure using Manhattan distances for the sake
 D <- dist(Y.mdmr, method = 'manhattan')
 G <- gower(D)
 q <- ncol(Y.mdmr)
-G.list <- vector(mode = 'list', length = q)
-names(G.list) <- names(Y.mdmr)
-for(i in 1:q){
-   Y.shuf <- Y.mdmr
-   Y.shuf[,i] <- sample(Y.shuf[,i])
-   G.list[[i]] <- gower(dist(Y.shuf, method = 'manhattan'))
-}
-delta(X = X.mdmr, G = G, G.list = G.list,  plot.res = T)
+G.list <- lapply(1:q, FUN = function(k) {
+  set.seed(k)
+  Y.shuf <- Y.mdmr
+  Y.shuf[,k] <- sample(Y.shuf[,k])
+  gower(dist(Y.shuf, method = 'manhattan'))
+})
+names(G.list) <- colnames(Y.mdmr)
+par(mar = c(5, 5, 4, 2) + 0.1)
+delta(X = X.mdmr, G = G, G.list = G.list, plot.res = T)
 ```
 
 Note that the results are the same as those presented by Option A, within error attributable to different permutations of each outcome variable. 
@@ -124,4 +127,6 @@ Gower, J. C. (1966). Some distance properties of latent root and vector methods 
 
 McArdle, B. H., & Anderson, M. J. (2001). Fitting multivariate models to community data: A comment on distance-based redundancy analysis. *Ecology, 82*(1), 290–297.
 
-McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (second revision under review). Extending multivariate distance matrix regression with an effect size measure and the distribution of the test statistic.
+McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (2017). Extending multivariate distance matrix regression with an effect size measure and the distribution of the test statistic. Psychometrika, 82, 1052-1077.
+
+McArtor, D. B. (2017). Extending a distance-based approach to multivariate  multiple regression (Doctoral Dissertation).

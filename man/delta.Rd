@@ -89,11 +89,11 @@ pair-wise effect size (i.e. the effect of each predictor on each outcome
 variable, conditional on the rest of the predictors).
 }
 \details{
-See McArtor et al. (2017) for a detailed description of how delta is computed.
-Note that it is a relative measure of effect, quantifying which effects are
-strong (high values of delta) and weak (low values of delta) within a single
-analysis, but estimates of delta cannot be directly compared across different
-datasets.
+See McArtor et al. (2017) for a detailed description of how delta is
+computed. Note that it is a relative measure of effect, quantifying which
+effects are strong (high values of delta) and weak (low values of delta)
+within a single analysis, but estimates of delta cannot be directly compared
+across different datasets.
 
 There are two options for using this function. The first option is to
 specify the predictor matrix \code{X}, the outcome matrix \code{Y}, the
@@ -112,29 +112,27 @@ distance metrics not supported by \code{dist}.
 \examples{
 data(mdmrdata)
 # --- Method 1 --- #
-delta(X.mdmr, Y = Y.mdmr, dtype = 'euclidean', niter = 1, seed = 12345)
+delta(X.mdmr, Y = Y.mdmr, dtype = "euclidean", niter = 1, seed = 12345)
 
 # --- Method 2 --- #
-D <- dist(Y.mdmr, method = 'euclidean')
+D <- dist(Y.mdmr, method = "euclidean")
 G <- gower(D)
 q <- ncol(Y.mdmr)
-G.list <- vector(mode = 'list', length = q)
+G.list <- vector(mode = "list", length = q)
 names(G.list) <- names(Y.mdmr)
-for(i in 1:q){
+for(i in 1:q) {
    Y.shuf <- Y.mdmr
    Y.shuf[,i] <- sample(Y.shuf[,i])
-   G.list[[i]] <- gower(dist(Y.shuf, method = 'euclidean'))
+   G.list[[i]] <- gower(dist(Y.shuf, method = "euclidean"))
 }
 delta(X.mdmr, G = G, G.list = G.list)
 
 }
-\author{
-Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
-}
 \references{
-McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (2017).
-Extending multivariate distance matrix regression with an effect size measure
-and the distribution of the test statistic. Psychometrika. Advance online
-publication.
+McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (2017). Extending
+ multivariate distance matrix regression with an effect size measure and the
+ distribution of the test statistic. Psychometrika, 82, 1052-1077.
 }
-
+\author{
+Daniel B. McArtor (dmcartor@gmail.com) [aut, cre]
+}

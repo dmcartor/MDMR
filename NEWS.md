@@ -1,3 +1,9 @@
+# MDMR 0.5.1
+
+* Various minor bug fixes
+* Cleaned up code a bit
+* Updated citations and author contact information
+
 # MDMR 0.5.0
 
 * Included a new function mixed.mdmr() that facilitates the use of MDMR with hierarchically clustered samples

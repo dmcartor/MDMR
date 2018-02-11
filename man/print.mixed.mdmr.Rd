@@ -18,6 +18,5 @@
 \code{print} method for class \code{mixed.mdmr}
 }
 \author{
-Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
+Daniel B. McArtor (dmcartor@gmail.com) [aut, cre]
 }
-
