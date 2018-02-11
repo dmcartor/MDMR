@@ -17,11 +17,10 @@ G Gower's centered dissimilarity matrix computed from D.
 Compute Gower's centered similarity matrix \eqn{G}, which is the matrix
 decomposed by the MDMR test statistic.
 }
-\author{
-Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
-}
 \references{
 Gower, J. C. (1966). Some distance properties of latent root and
 vector methods used in multivariate analysis. Biometrika, 53(3-4), 325-338.
 }
-
+\author{
+Daniel B. McArtor (dmcartor@gmail.com) [aut, cre]
+}

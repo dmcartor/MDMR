@@ -9,7 +9,6 @@
 Y.mdmr
 }
 \description{
-See package vignette by calling \code{vignette('mdmr-vignette')}.
+See package vignette by calling \code{vignette("mdmr-vignette")}.
 }
 \keyword{datasets}
-

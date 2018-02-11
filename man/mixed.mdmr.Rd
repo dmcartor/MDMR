@@ -88,7 +88,6 @@ mdmr.res <- mdmr(X = X.clust[,1:2], D = D, perm.p = FALSE)
 # Results look significant
 summary(mdmr.res)
 
-
 # Account for grouping variable
 mixed.res <- mixed.mdmr(~ x1 + x2 + (x1 + x2 | grp),
                         data = X.clust, D = D)
@@ -97,9 +96,6 @@ mixed.res <- mixed.mdmr(~ x1 + x2 + (x1 + x2 | grp),
 summary(mixed.res)
 
 
-}
-\author{
-Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
 }
 \references{
 Davies, R. B. (1980). The Distribution of a Linear Combination of
@@ -113,8 +109,7 @@ Davies, R. B. (1980). The Distribution of a Linear Combination of
 
  McArtor, D. B. (2017). Extending a distance-based approach to multivariate
  multiple regression (Doctoral Dissertation).
-
- McArtor, D. B. & Lubke, G. H. (in preparation). Multivariate distance matrix
- regression with hierarchically clustered samples.
 }
-
+\author{
+Daniel B. McArtor (dmcartor@gmail.com) [aut, cre]
+}

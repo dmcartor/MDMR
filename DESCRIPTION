@@ -1,10 +1,10 @@
 Package: MDMR
 Type: Package
 Title: Multivariate Distance Matrix Regression
-Version: 0.5.0
-Date: 2017-02-22
-Author: Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
-Maintainer: Daniel B. McArtor <dmcartor@nd.edu>
+Version: 0.5.1
+Date: 2018-02-11
+Author: Daniel B. McArtor (dmcartor@gmail.com) [aut, cre]
+Maintainer: Daniel B. McArtor <dmcartor@gmail.com>
 Description: Allows a user to conduct multivariate distance matrix regression using analytic p-values and compute measures of effect size.
 License: GPL (>= 2)
 LazyData: TRUE
@@ -21,4 +21,4 @@ Suggests:
 VignetteBuilder: knitr
 URL: http://github.com/dmcartor/mdmr
 BugReports: http://github.com/dmcartor/mdmr/issues
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1

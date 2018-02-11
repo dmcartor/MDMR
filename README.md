@@ -1,5 +1,5 @@
 # MDMR
-Conduct multivariate distance matrix regression (Anderson, 2001; McArdle & Anderson, 2001) using the analytical p-values described by McArtor, Lubke, \& Bergeman (second revision under review) and compute permutation-based measures of effect size proposed by McArtor et al.
+Conduct multivariate distance matrix regression (Anderson, 2001; McArdle & Anderson, 2001) using the analytical p-values described by McArtor, Lubke, \& Bergeman (2017) and compute permutation-based measures of effect size proposed by McArtor et al.
 
 The most recent version can be installed from github using the devtools package:
 
@@ -18,7 +18,7 @@ There are two primary functions that comprise this package: mdmr(), which regres
 
 For a complete illustration of the package, see the package vignette by running the following line in the R console:
 
-    vignette('mdmr-vignette')
+    vignette("mdmr-vignette")
 
 ## Example
 
@@ -26,7 +26,7 @@ For a complete illustration of the package, see the package vignette by running 
     data(mdmrdata)
     
     # Compute distance matrix
-    D <- dist(Y.mdmr, method = 'euclidean')
+    D <- dist(Y.mdmr, method = "euclidean")
     
     # Conduct MDMR
     mdmr.res <- mdmr(X = X.mdmr, D = D)
@@ -35,5 +35,5 @@ For a complete illustration of the package, see the package vignette by running 
     summary(mdmr.res)
     
     # Study univariate effect sizes
-    delta.res <- delta(X.mdmr, Y = Y.mdmr, dtype = 'euclidean', 
+    delta.res <- delta(X.mdmr, Y = Y.mdmr, dtype = "euclidean", 
                       niter = 10, plot.res = T)

@@ -24,7 +24,7 @@ To illustrate this package, we include the toy dataset *mdmrdata*, which is comp
 ```{r, message = F}
 library(MDMR)
 data(mdmrdata)
-D <- dist(Y.mdmr, method = 'manhattan')
+D <- dist(Y.mdmr, method = "manhattan")
 ```
 
 The function *mdmr()* can be used in two ways to regress $\mathbf{D}$ onto $\mathbf{X}$.
@@ -51,6 +51,7 @@ summary(mdmr.res2)
 # --- Output the eigenvalues of G using the first call to mdmr() and pass them to
 # --- subsequent calls
 # Generate a hypothetical additional predictor we want to test first
+set.seed(102)
 x1 <- rnorm(500)
 mdmr.tmp <- mdmr(X = x1, D = D, return.lambda = T)
 # Pass the eigenvalues output by mdmr(return.lambda = t) to the next call of mdmr()
@@ -66,8 +67,8 @@ In light of a statistically significant association between a predictor variable
 Post-hoc analyses such as correlations should not be used to answer this question under most circumstances because they do not take into consideration how the distance matrix was constructed. For example, one outcome item might have a high correlation with a predictor due to a few extreme outlying observations, but a robust distance metric may have been used that would not be driven by these outlying observations. This is the case here with $\mathbf{x}_1$ and $\mathbf{y}_1$:
 ```{r, fig.width = 5, fig.height = 5, fig.align = 'center'}
 plot(X.mdmr[,1], Y.mdmr[,1], 
-     main = paste0('Correlation = ', round(cor(X.mdmr[,1], Y.mdmr[,1]), 3)),
-     xlab = 'x1', ylab = 'y1')
+     main = paste0("Correlation = ", round(cor(X.mdmr[,1], Y.mdmr[,1]), 3)),
+     xlab = "x1", ylab = "y1")
 cor.test(X.mdmr[,1], Y.mdmr[,1])
 ```
 A post-hoc test of this correlation might lead a researcher to conclude that the relationship between $\mathbf{x}_1$ and $\mathbf{y}_1$ is a substantial driver of the significant association between $\mathbf{x}_1$ and $\mathbf{D}$, but this is not the case, as will be shown below. The $\mathbf{D}$ matrix was constructed with Manhattan distances, which are robust against outliers. It is important to use an effect size measure that takes into consideration the structure of $\mathbf{D}$ if one is to infer which univariate effects are driving associations between $\mathbf{X}$ and $\mathbf{D}$.
@@ -84,7 +85,8 @@ The first option to compute $\delta$ statistics it to pass the matrix of predict
 Calling *delta()* returns a data frame of the $\delta$ statistics whose rows correspond to omnibus and conditional effects on the columns, which each correspond to a variable comprising the multivariate outcome. If the argument *plot.it = T*, as is default, a heatmap will also be displayed to easily visualize the largest effects.
 
 ```{r, fig.width = 7, fig.height = 7/(16/9)}
-delta(X = X.mdmr, Y = Y.mdmr, dtype = 'manhattan', plot.res = T,
+par(mar = c(5, 5, 4, 2) + 0.1)
+delta(X = X.mdmr, Y = Y.mdmr, dtype = "manhattan", plot.res = T,
       niter = 1, seed = 12345)
 ```
 There are several things to note here. First, it is clear that each predictor is affecting only a small subset of the predictors, and that not all outcome variables are affected (e.g. $\mathbf{y}_3$). Second, we see that the relationship between $\mathbf{x}_3$ and $\mathbf{y}_8$ is the strongest of all univariate effects, and only a few other univariate effects are notable (those heavily shaded in the figure). Third, the omnibus effects tend to be larger than the conditional effects, as expected. Finally, note that despite the substantial correlation between $\mathbf{x}_1$ and $\mathbf{y_1}$, the $\delta$ statistic indicates that their relationship does not contribute to the significant effect of $\mathbf{x}_1$ on $\mathbf{D}$, as indicated by its extremely small $\delta$ statistic. As noted above, this is due to the fact that Manhattan distances are robust to the outlying observations driving their Pearson correlation. 
@@ -98,17 +100,18 @@ Essentially, the user must construct and store the $\mathbf{D}$ matrix correspon
 The code below illustrates this procedure using Manhattan distances for the sake of simplicity and to illustrate that the results will be the same from both implementations of *delta()*, within error due to different random permutations of each outcome item. Note that *gower()* can be called on any distance matrix or distance object in *R* to transform a distance matrix into Gower's centered matrix, so distance matrices that are produced by functions other than *dist()* can be easily adapted into the code below by replacing *dist(...)* with other means of computing distance matrices on $Y$ and $Y_{shuf}$. 
 
 ```{r, fig.width = 7, fig.height = 7/(16/9)}
-D <- dist(Y.mdmr, method = 'manhattan')
+D <- dist(Y.mdmr, method = "manhattan")
 G <- gower(D)
 q <- ncol(Y.mdmr)
-G.list <- vector(mode = 'list', length = q)
-names(G.list) <- names(Y.mdmr)
-for(i in 1:q){
-   Y.shuf <- Y.mdmr
-   Y.shuf[,i] <- sample(Y.shuf[,i])
-   G.list[[i]] <- gower(dist(Y.shuf, method = 'manhattan'))
-}
-delta(X = X.mdmr, G = G, G.list = G.list,  plot.res = T)
+G.list <- lapply(1:q, FUN = function(k) {
+  set.seed(k)
+  Y.shuf <- Y.mdmr
+  Y.shuf[,k] <- sample(Y.shuf[,k])
+  gower(dist(Y.shuf, method = "manhattan"))
+})
+names(G.list) <- colnames(Y.mdmr)
+par(mar = c(5, 5, 4, 2) + 0.1)
+delta(X = X.mdmr, G = G, G.list = G.list, plot.res = T)
 ```
 
 Note that the results are the same as those presented by Option A, within error attributable to different permutations of each outcome variable. 
@@ -124,4 +127,6 @@ Gower, J. C. (1966). Some distance properties of latent root and vector methods 
 
 McArdle, B. H., & Anderson, M. J. (2001). Fitting multivariate models to community data: A comment on distance-based redundancy analysis. *Ecology, 82*(1), 290–297.
 
-McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (second revision under review). Extending multivariate distance matrix regression with an effect size measure and the distribution of the test statistic.
+McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (2017). Extending multivariate distance matrix regression with an effect size measure and the distribution of the test statistic. Psychometrika, 82, 1052-1077.
+
+McArtor, D. B. (2017). Extending a distance-based approach to multivariate  multiple regression (Doctoral Dissertation).

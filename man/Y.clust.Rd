@@ -12,4 +12,3 @@ Y.clust
 See \code{\link{mixed.mdmr}}.
 }
 \keyword{datasets}
-

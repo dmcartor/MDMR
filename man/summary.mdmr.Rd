@@ -50,13 +50,10 @@ be drawn is that the p-value is smaller than \code{1/nperm}.
 # --- The following two approaches yield equivalent results --- #
 # Approach 1
 data(mdmrdata)
-D <- dist(Y.mdmr, method = 'euclidean')
+D <- dist(Y.mdmr, method = "euclidean")
 mdmr.res <- mdmr(X = X.mdmr, D = D)
 summary(mdmr.res)
 
-}
-\author{
-Daniel B. McArtor (dmcartor@nd.edu) [aut, cre]
 }
 \references{
 Davies, R. B. (1980). The Distribution of a Linear Combination of
@@ -70,7 +67,8 @@ Davies, R. B. (1980). The Distribution of a Linear Combination of
 
  McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (2017). Extending
  multivariate distance matrix regression with an effect size measure and the
- distribution of the test statistic. Psychometrika. Advance online
- publication.
+ distribution of the test statistic. Psychometrika, 82, 1052-1077.
 }
-
+\author{
+Daniel B. McArtor (dmcartor@gmail.com) [aut, cre]
+}

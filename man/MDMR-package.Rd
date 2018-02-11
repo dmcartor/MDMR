@@ -2,8 +2,8 @@
 % Please edit documentation in R/MDMR-package.R
 \docType{package}
 \name{MDMR-package}
-\alias{MDMR}
 \alias{MDMR-package}
+\alias{MDMR}
 \title{Multivariate Distance Matrix Regression}
 \description{
 \code{MDMR} allows a user to conduct multivariate distance matrix regression
@@ -28,6 +28,7 @@ samples consisting of (hierarchically) clustered observations.
  all three functions provide more general information than the package
  vignette.
 }
+
 \examples{
 ################################################################
 ## Conducting MDMR on data comprised of independent observations
@@ -69,13 +70,8 @@ Davies, R. B. (1980). The Distribution of a Linear Combination of
 
  McArtor, D. B., Lubke, G. H., & Bergeman, C. S. (2017). Extending
  multivariate distance matrix regression with an effect size measure and the
- distribution of the test statistic. Psychometrika. Advance online
- publication.
+ distribution of the test statistic. Psychometrika, 82, 1052-1077.
 
  McArtor, D. B. (2017). Extending a distance-based approach to multivariate
  multiple regression (Doctoral Dissertation).
-
- McArtor, D. B. & Lubke, G. H. (in preparation). Multivariate distance matrix
- regression with hierarchically clustered samples.
 }
-
