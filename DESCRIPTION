@@ -5,7 +5,7 @@ Version: 0.5.1
 Date: 2018-02-11
 Author: Daniel B. McArtor (dmcartor@gmail.com) [aut, cre]
 Maintainer: Daniel B. McArtor <dmcartor@gmail.com>
-Description: Allows a user to conduct multivariate distance matrix regression using analytic p-values and compute measures of effect size.
+Description: This package allows users to conduct multivariate distance matrix regression using analytic p-values and compute measures of effect size. For details on the method, see McArtor, Lubke, & Bergeman (2017) <https://doi.org/10.1007/s11336-016-9527-8>.
 License: GPL (>= 2)
 LazyData: TRUE
 Depends:
